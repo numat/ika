@@ -78,6 +78,8 @@ class TcpClient():
             if self.open:
                 try:
                     response = await self._handle_communication(command)
+                    if response is not None and 'IN_NAME' not in command:
+                        response = response[:-2] # strip response command readback
                 except asyncio.exceptions.IncompleteReadError:
                     logger.error('IncompleteReadError.  Are there multiple connections?')
                     return {}
@@ -102,7 +104,7 @@ class TcpClient():
             self.connection['writer'].write(command.encode() + self.eol)
             future = self.connection['reader'].readuntil(self.eol)
             line = await asyncio.wait_for(future, timeout=0.5)
-            result = line.decode()
+            result = line.decode().strip()
             self.timeouts = 0
         except (asyncio.TimeoutError, TypeError, OSError):
             self.timeouts += 1

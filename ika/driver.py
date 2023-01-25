@@ -152,7 +152,7 @@ class Hotplate(TcpClient, HotplateProtocol):
     async def get_info(self):
         """Get name and safety setpoint of hotplate."""
         name = await self._write_and_read(self.READ_DEVICE_NAME)
-        temp_limit = await self._write_and_read(self.READ_RATED_SET_SAFETY_TEMPERATURE_VALUE)
+        temp_limit = await self._write_and_read(self.READ_TEMP_LIMIT)
         response = {
             'name': name,
             'temp_limit': temp_limit,
