@@ -92,6 +92,7 @@ class HotplateProtocol():
 
     # hotplate NAMUR commands
     READ_DEVICE_NAME = "IN_NAME"
+    READ_DEVICE_TYPE = "IN_TYPE"
     READ_ACTUAL_PROCESS_TEMP = "IN_PV_1"
     READ_ACTUAL_SURFACE_TEMP = "IN_PV_2"
     READ_ACTUAL_SPEED = "IN_PV_4"
@@ -166,9 +167,11 @@ class Hotplate(TcpClient, HotplateProtocol):
     async def get_info(self):
         """Get name and safety setpoint of hotplate."""
         name = await self._write_and_read(self.READ_DEVICE_NAME)
+        device_type = await self._write_and_read(self.READ_DEVICE_TYPE)
         temp_limit = await self._write_and_read(self.READ_TEMP_LIMIT)
         response = {
             'name': name,
+            'device_type': device_type,
             'temp_limit': temp_limit,
         }
         return response

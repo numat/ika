@@ -81,11 +81,12 @@ class TcpClient():
                     print("command:", command, ", response:", response)
                     if response is None:
                         return None
-                    if 'IN_NAME' not in command:
-                        if command[-1] != response[-1]:
-                            logger.error(f'Invalid response {response} to command {command}.')
-                            return None
-                        return response[:-2]  # strip response command readback
+                    elif 'IN_NAME' in command or 'TYPE' in command:
+                        return response
+                    elif command[-1] != response[-1]:
+                        logger.error(f'Invalid response {response} to command {command}.')
+                        return None
+                    return response[:-2]  # strip response command readback
                 except asyncio.exceptions.IncompleteReadError:
                     logger.error('IncompleteReadError.  Are there multiple connections?')
                     return None
