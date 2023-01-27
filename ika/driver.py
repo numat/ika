@@ -96,24 +96,26 @@ class HotplateProtocol():
     READ_ACTUAL_SURFACE_TEMP = "IN_PV_2"
     READ_ACTUAL_SPEED = "IN_PV_4"
     READ_VISCOSITY_TREND_VALUE = "IN_PV_5"
-    READ_RATED_TEMPERATURE_VALUE = "IN_SP_1"
+    READ_PROCESS_TEMP_SETPOINT = "IN_SP_1"
+    READ_SURFACE_TEMP_SETPOINT = "IN_SP_2"
     READ_TEMP_LIMIT = "IN_SP_3"  # find the set safe temperature of the plate, the target/set
     # temperature the plate can go to is 50 degrees beneath this
-    READ_RATED_SPEED_VALUE = "IN_SP_4"
-    SET_TEMPERATURE_VALUE = "OUT_SP_1 "  # requires a value to be appended to the end
-    SET_SPEED_VALUE = "OUT_SP_4 "  # requires a value to be appended to the end
+    READ_SPEED_SETPOINT = "IN_SP_4"
+    SET_PROCESS_TEMP_SETPOINT = "OUT_SP_1 "  # requires a value to be appended
+    SET_SURFACE_TEMP_SETPOINT = "OUT_SP_2 "
+    SET_SPEED_SETPOINT = "OUT_SP_4 "  # requires a value to be appended
     START_THE_HEATER = "START_1"
     STOP_THE_HEATER = "STOP_1"
     START_THE_MOTOR = "START_4"
     STOP_THE_MOTOR = "STOP_4"
-    SWITCH_TO_NORMAL_OPERATING_MODE = "RESET"
+    RESET = "RESET"
     SET_OPERATING_MODE_A = "SET_MODE_A"
     SET_OPERATING_MODE_B = "SET_MODE_B"
     SET_OPERATING_MODE_D = "SET_MODE_D"
     SET_WD_SAFETY_LIMIT_TEMPERATURE_WITH_SET_VALUE_ECHO = "OUT_SP_12@"
-    # requires a value to be appended to the end of the command
+    # requires a value to be appended
     SET_WD_SAFETY_LIMIT_SPEED_WITH_SET_VALUE_ECHO = "OUT_SP_42@"
-    # requires a value to be appended to the end of the command
+    # requires a value to be appended
     WATCHDOG_MODE_1 = "OUT_WD1@"  # requires a watchdog time (20-1500 s) to be appended to the end
     # This command launches the watchdog function and must be transmitted within the set time.
     # In watchdog mode 1, if event WD1 occurs, the heating and stirring functions are switched off
@@ -139,13 +141,25 @@ class Hotplate(TcpClient, HotplateProtocol):
     async def get(self):
         """Get hotplate speed, surface temperature, and process temperature readings."""
         speed = await self._write_and_read(self.READ_ACTUAL_SPEED)
+        speed_sp = await self._write_and_read(self.READ_SPEED_SETPOINT)
         surface_temp = await self._write_and_read(self.READ_ACTUAL_SURFACE_TEMP)
+        surface_temp_sp = await self._write_and_read(self.READ_SURFACE_TEMP_SETPOINT)
         process_temp = await self._write_and_read(self.READ_ACTUAL_PROCESS_TEMP)
+        process_temp_sp = await self._write_and_read(self.READ_PROCESS_TEMP_SETPOINT)
         # FIXME handle case where process temp probe is unplugged
         response = {
-            'speed': speed,
-            'surface_temp': surface_temp,
-            'process_temp': process_temp,
+            'speed': {
+                'setpoint': speed_sp,
+                'actual': speed,
+            },
+            'surface_temp': {
+                'setpoint': surface_temp_sp,
+                'actual': surface_temp,
+            },
+            'process_temp': {
+                'setpoint': process_temp_sp,
+                'actual': process_temp,
+            },
         }
         return response
 
@@ -161,7 +175,7 @@ class Hotplate(TcpClient, HotplateProtocol):
 
     async def control(self, equipment: str, on: bool):
         """Control the heater controlling process temperature, or shaker motor.
-        
+
         Note: direct control of surface temperature is not implemented.
         """
         if equipment == 'heater':
@@ -170,4 +184,24 @@ class Hotplate(TcpClient, HotplateProtocol):
         elif equipment == 'motor':
             await self._write(self.START_THE_MOTOR if on else self.STOP_THE_MOTOR)
         else:
-            raise ValueError(f'Equipment "{equipment} invalid.  Must be either "heater" or "motor"')
+            raise ValueError(f'Equipment "{equipment} invalid. '
+                             'Must be either "heater" or "motor"')
+
+    async def set(self, equipment: str, setpoint: float):
+        """Set a temperature or stirrer setpoint."""
+        if equipment == 'process':
+            await self._write(self.SET_PROCESS_TEMP_SETPOINT + str(setpoint))
+        elif equipment == 'surface':
+            await self._write(self.SET_SURFACE_TEMP_SETPOINT + str(setpoint))
+        elif equipment == 'shaker':
+            if setpoint < 50 or setpoint > 1700:
+                raise ValueError(f"Cannot set shaker to {setpoint}RPM. "
+                                 "Minimum shaker setpoint is 50RPM and maximum is 1700RPM.")
+            await self._write(self.SET_SPEED_SETPOINT + str(setpoint))
+        else:
+            raise ValueError(f'Equipment "{equipment} invalid. '
+                             'Must be "process", "surface", or "shaker"')
+
+    async def reset(self):
+        """Reset the hotplate, and turn off the heater and stirrer."""
+        await self._write(self.RESET)
