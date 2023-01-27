@@ -78,14 +78,33 @@ class TcpClient():
             if self.open:
                 try:
                     response = await self._handle_communication(command)
-                    if response is not None and 'IN_NAME' not in command:
-                        response = response[:-2] # strip response command readback
+                    print("command:", command, ", response:", response)
+                    if response is None:
+                        return None
+                    if 'IN_NAME' not in command:
+                        if command[-1] != response[-1]:
+                            logger.error(f'Invalid response {response} to command {command}.')
+                            return None
+                        return response[:-2]  # strip response command readback
                 except asyncio.exceptions.IncompleteReadError:
                     logger.error('IncompleteReadError.  Are there multiple connections?')
-                    return {}
+                    return None
             else:
-                response = None
-        return response
+                return None
+
+    async def _write(self, command):
+        """Write a command and do not expect a response.
+
+        As industrial devices are commonly unplugged, this has been expanded to
+        handle recovering from disconnects.  A lock is used to queue multiple requests.
+        """
+        if not self.lock:
+            # lock initialized here so the loop exists.
+            self.lock = asyncio.Lock()
+        async with self.lock:  # lock releases on CancelledError
+            await self._handle_connection()
+            print(command)
+            await self._handle_communication(command)
 
     async def _handle_connection(self):
         """Automatically maintain TCP connection."""
@@ -106,11 +125,11 @@ class TcpClient():
             line = await asyncio.wait_for(future, timeout=0.5)
             result = line.decode().strip()
             self.timeouts = 0
+            return result
         except (asyncio.TimeoutError, TypeError, OSError):
             self.timeouts += 1
             if self.timeouts == self.max_timeouts:
                 logger.error(f'Reading from {self.ip} timed out '
                              f'{self.timeouts} times.')
                 self.close()
-            result = None
-        return result
+            return None

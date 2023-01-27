@@ -158,3 +158,16 @@ class Hotplate(TcpClient, HotplateProtocol):
             'temp_limit': temp_limit,
         }
         return response
+
+    async def control(self, equipment: str, on: bool):
+        """Control the heater controlling process temperature, or shaker motor.
+        
+        Note: direct control of surface temperature is not implemented.
+        """
+        if equipment == 'heater':
+            await self._write(self.START_THE_HEATER if on else self.STOP_THE_HEATER)
+            # note - apparently after starting the heater it resets the setpoint to 0C
+        elif equipment == 'motor':
+            await self._write(self.START_THE_MOTOR if on else self.STOP_THE_MOTOR)
+        else:
+            raise ValueError(f'Equipment "{equipment} invalid.  Must be either "heater" or "motor"')
