@@ -153,8 +153,8 @@ class Hotplate(TcpClient, HotplateProtocol):
         # FIXME handle case where process temp probe is unplugged
         response = {
             'speed': {
-                'setpoint': int(speed_sp),
-                'actual': int(speed),
+                'setpoint': int(speed_sp) if type(speed_sp) is float else speed_sp,
+                'actual': int(speed) if type(speed) is float else speed,
             },
             'surface_temp': {
                 'setpoint': surface_temp_sp,

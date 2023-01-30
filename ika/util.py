@@ -90,6 +90,7 @@ class TcpClient():
                         )
                     elif command[-1] != response[-1]:
                         logger.error(f'Invalid response {response} to command {command}.')
+                        await self._clear()
                         return None
                     return float(response[:-2])  # strip response command readback
                 except asyncio.exceptions.IncompleteReadError:
@@ -111,6 +112,11 @@ class TcpClient():
             await self._handle_connection()
             print(command)
             await self._handle_communication(command)
+
+    async def _clear(self):
+        """Clear the reader stream when it has been corrupted from multiple connections."""
+        logger.warning("Multiple connections detected; clearing reader stream.")
+        logger.warning(await self.connection['reader'].read(100))
 
     async def _handle_connection(self):
         """Automatically maintain TCP connection."""
