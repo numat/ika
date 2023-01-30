@@ -153,8 +153,8 @@ class Hotplate(TcpClient, HotplateProtocol):
         # FIXME handle case where process temp probe is unplugged
         response = {
             'speed': {
-                'setpoint': speed_sp,
-                'actual': speed,
+                'setpoint': int(speed_sp),
+                'actual': int(speed),
             },
             'surface_temp': {
                 'setpoint': surface_temp_sp,
@@ -203,7 +203,8 @@ class Hotplate(TcpClient, HotplateProtocol):
             if setpoint < 50 or setpoint > 1700:
                 raise ValueError(f"Cannot set shaker to {setpoint}RPM. "
                                  "Minimum shaker setpoint is 50RPM and maximum is 1700RPM.")
-            await self._write(self.SET_SPEED_SETPOINT + str(setpoint))
+            # setpoints can be written as a decimal but the shaker will round off to int
+            await self._write(self.SET_SPEED_SETPOINT + str(int(setpoint)))
         else:
             raise ValueError(f'Equipment "{equipment} invalid. '
                              'Must be "process", "surface", or "shaker"')

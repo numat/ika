@@ -91,7 +91,7 @@ class TcpClient():
                     elif command[-1] != response[-1]:
                         logger.error(f'Invalid response {response} to command {command}.')
                         return None
-                    return response[:-2]  # strip response command readback
+                    return float(response[:-2])  # strip response command readback
                 except asyncio.exceptions.IncompleteReadError:
                     logger.error('IncompleteReadError.  Are there multiple connections?')
                     return None
