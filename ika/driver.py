@@ -126,6 +126,9 @@ class HotplateProtocol():
     # In watchdog mode 2, if event WD2 occurs, the speed and temperature setpoint are set to their
     # watchdog setpoints.
     # the WD2 event can be reset with the command "OUT_WD2@0", which also stops the watchdog
+    COMMUNICATE_WITH_EUROSTAR = "IN_PV_4"
+    # If this response is received, the hotplate has been erroneously configured to attempt to
+    # communicate with a Eurostar overhead stirrer over RS-232.
 
 
 class Hotplate(TcpClient, HotplateProtocol):

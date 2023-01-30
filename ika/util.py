@@ -83,6 +83,11 @@ class TcpClient():
                         return None
                     elif 'IN_NAME' in command or 'TYPE' in command:
                         return response
+                    elif 'IN_PV_4' in response:
+                        raise ConnectionError(
+                            'Hotplate configured to communciate with a Eurostar overhead stirrer. '
+                            'This must be turned off in the hotplate settings.'
+                        )
                     elif command[-1] != response[-1]:
                         logger.error(f'Invalid response {response} to command {command}.')
                         return None
