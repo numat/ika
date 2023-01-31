@@ -114,7 +114,16 @@ class Hotplate(RealHotplate):
 
     async def _write(self, command):
         await asyncio.sleep(uniform(0.0, 0.1))
-        command, value = command.split(" ")
+        if command == self.START_THE_MOTOR:
+            self.state["speed"]["active"] = True
+        elif command == self.STOP_THE_MOTOR:
+            self.state["speed"]["active"] = False
+        elif command == self.START_THE_HEATER:
+            self.state["process_temp"]["active"] = True
+        elif command == self.STOP_THE_HEATER:
+            self.state["process_temp"]["active"] = False
+        else:
+            command, value = command.split(" ")
         if command == self.SET_PROCESS_TEMP_SETPOINT.strip():
             self.state["process_temp"]["setpoint"] = float(value)
         elif command == self.SET_SURFACE_TEMP_SETPOINT.strip():

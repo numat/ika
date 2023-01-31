@@ -69,3 +69,29 @@ async def test_setpoint_roundtrip():
             assert process_sp == response['process_temp']['setpoint']
             assert surface_sp == response['surface_temp']['setpoint']
     await get()
+
+
+async def test_start_stop():
+    """Confirm that the heater and shaker motor can be controlled."""
+    async def get():
+        async with Hotplate('hotplate-ip.local') as device:
+            response = await device.get()
+            assert response['process_temp']['active'] is False
+            assert response['speed']['active'] is False
+
+            await device.control(equipment='heater', on=True)
+            response = await device.get()
+            assert response['process_temp']['active']
+            assert response['speed']['active'] is False
+
+            await device.control(equipment='motor', on=True)
+            response = await device.get()
+            assert response['process_temp']['active']
+            assert response['speed']['active']
+
+            await device.control(equipment='heater', on=False)
+            await device.control(equipment='motor', on=False)
+            response = await device.get()
+            assert response['process_temp']['active'] is False
+            assert response['speed']['active'] is False
+    await get()
