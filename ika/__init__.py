@@ -26,14 +26,15 @@ def command_line(args=None):
         async def get():
             async with OverheadStirrer(args.address, args.port) as device:
                 d = await device.get()
-                if not args.no_info and d.get('on', True):
+                if not args.no_info:
                     d['info'] = await device.get_info()
                 print(json.dumps(d, indent=4))
     elif args.type == 'hotplate':
         async def get():
-            async with Hotplate(args.address, args.port) as device:
+            async with Hotplate(args.address, args.port,
+                                include_surface_control=not args.no_info) as device:
                 d = await device.get()
-                if not args.no_info and d.get('on', True):
+                if not args.no_info:
                     d['info'] = await device.get_info()
                 print(json.dumps(d, indent=4))
     elif args.type in ['vacuum']:

@@ -134,36 +134,39 @@ class HotplateProtocol():
 class Hotplate(TcpClient, HotplateProtocol):
     """Driver for IKA hotplate stirrer."""
 
-    def __init__(self, ip: str, port: int = 23):
+    def __init__(self, ip: str, port: int = 23, include_surface_control=False):
         """Set up connection parameters, IP address and port."""
         self.units = None
         if ":" in ip:
             port = int(ip.split(":")[1])
             ip = ip.split(':')[0]
         super().__init__(ip, port)
+        self.include_surface_control = include_surface_control
 
-    async def get(self):
+    async def get(self, include_surface_control=False):
         """Get hotplate speed, surface temperature, and process temperature readings."""
         speed = await self._write_and_read(self.READ_ACTUAL_SPEED)
         speed_sp = await self._write_and_read(self.READ_SPEED_SETPOINT)
-        surface_temp = await self._write_and_read(self.READ_ACTUAL_SURFACE_TEMP)
-        surface_temp_sp = await self._write_and_read(self.READ_SURFACE_TEMP_SETPOINT)
         process_temp = await self._write_and_read(self.READ_ACTUAL_PROCESS_TEMP)
         process_temp_sp = await self._write_and_read(self.READ_PROCESS_TEMP_SETPOINT)
+        shaker_status = await self._write_and_read(self.READ_SHAKER_STATUS)
+        process_heater_status = await self._write_and_read(self.READ_PROCESS_HEATER_STATUS)
+        surface_data = {
+            'actual': await self._write_and_read(self.READ_ACTUAL_SURFACE_TEMP)
+        }
+        if self.include_surface_control:
+            surface_data['setpoint'] = await self._write_and_read(self.READ_SURFACE_TEMP_SETPOINT)
         # FIXME handle case where process temp probe is unplugged
         response = {
             'speed': {
                 'setpoint': int(speed_sp) if type(speed_sp) is float else speed_sp,
                 'actual': int(speed) if type(speed) is float else speed,
             },
-            'surface_temp': {
-                'setpoint': surface_temp_sp,
-                'actual': surface_temp,
-            },
             'process_temp': {
                 'setpoint': process_temp_sp,
                 'actual': process_temp,
             },
+            'surface_temp': surface_data,
         }
         return response
 

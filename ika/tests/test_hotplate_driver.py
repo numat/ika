@@ -60,7 +60,7 @@ async def test_readme_example(expected_info_response):
 async def test_setpoint_roundtrip():
     """Confirm that setpoints can be updated."""
     async def get():
-        async with Hotplate('hotplate-ip.local') as device:
+        async with Hotplate('hotplate-ip.local', include_surface_control=True) as device:
             process_sp = round(uniform(15, 100), 2)
             surface_sp = round(uniform(30, 150), 2)
             await device.set(equipment='process', setpoint=process_sp)
