@@ -105,6 +105,8 @@ class Hotplate(RealHotplate):
             return self.state["surface_temp"]["setpoint"]
         elif command == self.READ_PROCESS_TEMP_SETPOINT:
             return self.state["process_temp"]["setpoint"]
+        elif command == self.READ_SPEED_SETPOINT:
+            return self.state["speed"]["setpoint"]
         elif command == self.READ_SHAKER_STATUS:
             return self.state["speed"]["active"]
         elif command == self.READ_PROCESS_HEATER_STATUS:
