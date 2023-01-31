@@ -102,6 +102,9 @@ class HotplateProtocol():
     READ_TEMP_LIMIT = "IN_SP_3"  # find the set safe temperature of the plate, the target/set
     # temperature the plate can go to is 50 degrees beneath this
     READ_SPEED_SETPOINT = "IN_SP_4"
+    READ_PROCESS_HEATER_STATUS = "STATUS_1"  # undocumented in manual
+    READ_SURFACE_HEATER_STATUS = "STATUS_2"  # undocumented in manual
+    READ_SHAKER_STATUS = "STATUS_4"  # undocumented in manual
     SET_PROCESS_TEMP_SETPOINT = "OUT_SP_1 "  # requires a value to be appended
     SET_SURFACE_TEMP_SETPOINT = "OUT_SP_2 "
     SET_SPEED_SETPOINT = "OUT_SP_4 "  # requires a value to be appended
@@ -156,15 +159,19 @@ class Hotplate(TcpClient, HotplateProtocol):
         }
         if self.include_surface_control:
             surface_data['setpoint'] = await self._write_and_read(self.READ_SURFACE_TEMP_SETPOINT)
+            # surface_data['active'] = await self._write_and_read(self.READ_SURFACE_HEATER_STATUS)
+            # FIXME figure out response value of '-90 02'
         # FIXME handle case where process temp probe is unplugged
         response = {
             'speed': {
                 'setpoint': int(speed_sp) if type(speed_sp) is float else speed_sp,
                 'actual': int(speed) if type(speed) is float else speed,
+                'active': shaker_status,
             },
             'process_temp': {
                 'setpoint': process_temp_sp,
                 'actual': process_temp,
+                'active': process_heater_status,
             },
             'surface_temp': surface_data,
         }

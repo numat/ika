@@ -67,12 +67,15 @@ class Hotplate(RealHotplate):
             },
             "process_temp": {
                 "setpoint": 50,
+                "active": False,
             },
             "surface_temp": {
                 "setpoint": 70,
+                "active": False,
             },
             "speed": {
                 "setpoint": 300,
+                "active": False,
             },
         }
 
@@ -102,6 +105,12 @@ class Hotplate(RealHotplate):
             return self.state["surface_temp"]["setpoint"]
         elif command == self.READ_PROCESS_TEMP_SETPOINT:
             return self.state["process_temp"]["setpoint"]
+        elif command == self.READ_SHAKER_STATUS:
+            return self.state["speed"]["active"]
+        elif command == self.READ_PROCESS_HEATER_STATUS:
+            return self.state["process_temp"]["active"]
+        elif command == self.READ_SURFACE_HEATER_STATUS:
+            return self.state["surface_temp"]["active"]
 
     async def _write(self, command):
         await asyncio.sleep(uniform(0.0, 0.1))

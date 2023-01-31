@@ -92,6 +92,10 @@ class TcpClient():
                         logger.error(f'Invalid response {response} to command {command}.')
                         await self._clear()
                         return None
+                    elif 'STATUS_2' in command:
+                        raise NotImplementedError  # not sure how to interpret response of '-90 2'
+                    elif 'STATUS' in command:
+                        return response[0:2] == '11'  # undocumented, 11 = active, 12 = inactive
                     return float(response[:-2])  # strip response command readback
                 except asyncio.exceptions.IncompleteReadError:
                     logger.error('IncompleteReadError.  Are there multiple connections?')
