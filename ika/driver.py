@@ -255,7 +255,48 @@ class VacuumProtocol:
         - the decimal separator in a number is a dt (hex 0x2E)
     """
 
-    ...
+    # vacuum pump NAMUR commands
+    # Return the actual values: 'IN_PARA1'
+    # Set the set values for the pump control: 'OUT_PARA1'
+    # Set the set values for Bluetooth connection: 'OUT_PARA2'
+    # Send the actual device status: 'OUT_STATUS'
+    # Reads the status of a device: 'IN_STATUS'
+    # Read the version of the firmware: 'IN_VERSION'
+    # Read the release date of the display/ logic firmware: 'IN_DATE'
+    READ_DEVICE_NAME = 'IN_NAME'
+    # Read the device type.: 'IN_DEVICE'
+    # Read mac address of Wico.: 'IN_ADDRESS'
+    # Read paired mac address of station.: 'IN_PARING' (sic)
+    # Write new paired mac addresses of both station and Wico: 'OUT_ADDRESS'
+    # Reads the set pressure value: 'IN_SP_66'
+    # Sets set point pressure value: 'OUT_SP_66'
+    # Reads the actual pressure value: 'IN_PV_66'
+    # Reads the evacuating mode: 'IN_MODE_66'
+    # Sets the evacuating mode: 'OUT_MODE_66'
+    # Reads error state: 'IN_ERROR'
+    # Test Error. Sends out error code: 'OUT_ERROR'
+    # Reads Bluetooth Device Name: 'IN_BT_NAME'
+    # Reads custom device name: 'IN_CUSTOM_DEVICE_NAME'
+    # Reads communication watchdog time: 'OUT_CUSTOM_DEVICE_NAME'
+    # Sets communication watchdog time: 'IN_WD1@'
+    # Set PC communication watchdog time 2: 'OUT_WD1@'
+    # Set the PC safety pump rate: 'OUT_WD2@'
+    # Set the PC safety pressure: 'OUT_SP_41'
+    SWITCH_TO_NORMAL_OPERATING_MODE = 'RESET'
+    # Starts the measurement: 'START_66'
+    # Stops the measurement: 'STOP_66'
+    # Starts IAP mode: 'ENTER_IAP'
+    # It is used to calibrate vacuum: 'CALIB_66'
+    # It is used to read vacuum calibration values: 'IN_CALIB_66'
+    # It is used to calibrate vacuum: 'OUT_CALIB_66'
+
+    ERROR_CODES = {
+        3: ("The device temperature has exceeeded its limit."
+            "Have you tried turning it off and on again?"),
+        4: "The motor has overloaded.  Have you tried turning it off and on again?",
+        8: "The speed sensor has faulted.  Contact service.",
+        9: "The internal flash has a read or write error.  Contact service."
+    }
 
 
 class Vacuum(TcpClient, VacuumProtocol):
