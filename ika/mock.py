@@ -135,3 +135,7 @@ class Hotplate(RealHotplate):
 
 class Shaker(AsyncClientMock):
     """Mocks the orbital shaker driver for offline testing."""
+
+
+class Vacuum(AsyncClientMock):
+    """Mocks the vacuum driver for offline testing."""
