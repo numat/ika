@@ -222,3 +222,41 @@ class Hotplate(TcpClient, HotplateProtocol):
     async def reset(self):
         """Reset the hotplate, and turn off the heater and stirrer."""
         await self._write(self.RESET)
+
+
+class ShakerProtocol:
+    """Protocol for communicating with an orbital shaker.
+
+    Command syntax and format from the manual:
+        - commands and parameters are transmitted as capital letters
+        - commands and parameters including successive parameters are separated by at least
+          one space (hex 0x20)
+        - each individual command (including parameters and data and each response are terminated
+          with Blank CR LF (hex 0x20 hex 0x0d hex 0x0A) and have a maximum length of 80 characters
+        - the decimal separator in a number is a dt (hex 0x2E)
+    """
+
+    ...
+
+
+class Shaker(TcpClient, ShakerProtocol):
+    """Driver for IKA orbital shaker."""
+
+
+class VacuumProtocol:
+    """Protocol for communicating with a vacuum pump.
+
+    Command syntax and format from the manual:
+        - commands and parameters are transmitted as capital letters
+        - commands and parameters including successive parameters are separated by at least
+          one space (hex 0x20)
+        - each individual command (including parameters and data and each response are terminated
+          with Blank CR LF (hex 0x20 hex 0x0d hex 0x0A) and have a maximum length of 80 characters
+        - the decimal separator in a number is a dt (hex 0x2E)
+    """
+
+    ...
+
+
+class Vacuum(TcpClient, VacuumProtocol):
+    """Driver for IKA vacuum pump."""

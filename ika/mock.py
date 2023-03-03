@@ -131,3 +131,7 @@ class Hotplate(RealHotplate):
             self.state["process_temp"]["setpoint"] = float(value)
         elif command == self.SET_SURFACE_TEMP_SETPOINT.strip():
             self.state["surface_temp"]["setpoint"] = float(value)
+
+
+class Shaker(AsyncClientMock):
+    """Mocks the orbital shaker driver for offline testing."""

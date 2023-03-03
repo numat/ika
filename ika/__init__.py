@@ -4,7 +4,7 @@ Python driver for IKA equipment.
 Distributed under the GNU General Public License v3
 Copyright (C) 2022 NuMat Technologies
 """
-from ika.driver import Hotplate, OverheadStirrer
+from ika.driver import Hotplate, OverheadStirrer, Shaker, Vacuum
 
 
 def command_line(args=None):
@@ -37,7 +37,7 @@ def command_line(args=None):
                 if not args.no_info:
                     d['info'] = await device.get_info()
                 print(json.dumps(d, indent=4))
-    elif args.type in ['vacuum']:
+    elif args.type in ['vacuum, shaker']:
         raise NotImplementedError((f"Not implemented yet for device type: {args.type}"))
     else:
         raise ValueError(f"Unsupported device type: {args.type}")
