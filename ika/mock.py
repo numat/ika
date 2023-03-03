@@ -2,6 +2,7 @@
 
 import asyncio
 from random import uniform
+from typing import Dict, Union
 from unittest.mock import MagicMock
 
 from .driver import Hotplate as RealHotplate
@@ -59,7 +60,7 @@ class Hotplate(RealHotplate):
         """Set up connection parameters with default port."""
         super().__init__(*args, **kwargs)
         self.client = AsyncClientMock()
-        self.state = {
+        self.state: Dict[str, Dict[str, Union[bool, float, str]]] = {
             "info": {
                 "name": "SPINNY HOT THING",
                 "device_type": 1,
