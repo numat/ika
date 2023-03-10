@@ -26,8 +26,8 @@ class OverheadStirrer(RealOverheadStirrer):
         self.client = AsyncClientMock()
         self.state = {
             "name": "STIRR GO WHIRRR",
-            "torque_limit": 15.0,
-            "speed_limit": 150.0,
+            "torque_limit": 60.0,
+            "speed_limit": 2000.0,
         }
 
     async def __aenter__(self, *args):
