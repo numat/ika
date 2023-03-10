@@ -122,7 +122,11 @@ class TcpClient():
     async def _clear(self):
         """Clear the reader stream when it has been corrupted from multiple connections."""
         logger.warning("Multiple connections detected; clearing reader stream.")
-        logger.warning(await self.connection['reader'].read(100))
+        try:
+            junk = await asyncio.wait_for(self.connection['reader'].read(100), timeout=0.5)
+            logger.warning(junk)
+        except TimeoutError:
+            pass
 
     async def _handle_connection(self):
         """Automatically maintain TCP connection."""
