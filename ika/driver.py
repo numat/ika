@@ -21,6 +21,7 @@ class OverheadStirrerProtocol():
 
     # overhead stirrer NAMUR commands
     READ_DEVICE_NAME = "IN_NAME"
+    SET_DEVICE_NAME = "OUT_NAME "  # set name, undocumented
     READ_PT1000 = "IN_PV_3"  # read PT1000 value - temperature from the temperature sensor
     READ_ACTUAL_SPEED = "IN_PV_4"  # current actual speed
     READ_ACTUAL_TORQUE = "IN_PV_5"  # current actual torque
@@ -28,16 +29,18 @@ class OverheadStirrerProtocol():
     READ_TORQUE_LIMIT = "IN_SP_5"
     READ_SPEED_LIMIT = "IN_SP_6"
     READ_SAFETY_SPEED = "IN_SP_8"  # safety speed value
-    SET_SPEED = "OUT_SP_4"  # set the speed setpoint
-    SET_TORQUE_LIMIT = "OUT_SP_5"  # set the torque limit
-    SET_SPEED_LIMIT = "OUT_SP_6"
-    SET_SAFETY_SPEED = "OUT_SP_8"
+    SET_SPEED = "OUT_SP_4 "  # set the speed setpoint
+    SET_TORQUE_LIMIT = "OUT_SP_5 "  # set the torque limit
+    SET_SPEED_LIMIT = "OUT_SP_6 "
+    SET_SAFETY_SPEED = "OUT_SP_8 "
     START_MOTOR = "START_4"  # start stirring
     STOP_MOTOR = "STOP_4"  # stop stirring
+    READ_MOTOR_STATUS = "STATUS_4"  # running status, undocumented in manual
     SWITCH_TO_NORMAL_OPERATING_MODE = 'RESET'
     # todo change the direction or rotation with "OUT_MODE_n" (n = 1 or 2).
     # doesn't seem to work with the microstar C
-    SET_ROTATION_DIRECTION = "OUT_MODE_"
+    SET_ROTATION_CLOCKWISE = "OUT_MODE_1"
+    SET_ROTATION_CLOCKWISE = "OUT_MODE_2"  # Fixme: verify
     READ_ROTATION_DIRECTION = "IN_MODE"  # todo doesn't seem to work with the microstar C
 
 
@@ -55,11 +58,17 @@ class OverheadStirrer(TcpClient, OverheadStirrerProtocol):
     async def get(self):
         """Get overhead stirrer speed, torque, and external temperature reading."""
         speed = await self._write_and_read(self.READ_ACTUAL_SPEED)
+        speed_sp = await self._write_and_read(self.READ_SET_SPEED)
+        motor_status = await self._write_and_read(self.READ_MOTOR_STATUS)
         torque = await self._write_and_read(self.READ_ACTUAL_TORQUE)
         temp = await self._write_and_read(self.READ_PT1000)
         # FIXME handle case where temp probe is unplugged
         response = {
-            'speed': speed,
+            'speed': {
+                'setpoint': speed_sp,
+                'actual': speed,
+                'active': motor_status,
+            },
             'torque': torque,
             'temp': temp,
         }
@@ -76,6 +85,25 @@ class OverheadStirrer(TcpClient, OverheadStirrerProtocol):
             'speed_limit': speed_limit,
         }
         return response
+
+    async def set(self, equipment='speed', setpoint=0):
+        """Set a parameter to the specified value."""
+        if equipment == 'speed':
+            await self._write(self.SET_SPEED + str(setpoint))
+        elif equipment == 'speed_limit':
+            await self._write(self.SET_SPEED_LIMIT + str(setpoint))
+        elif equipment == 'torque_limit':
+            await self._write(self.SET_TORQUE_LIMIT + str(setpoint))
+        else:
+            raise ValueError("Call with 'speed', 'speed_limit', or 'torque_limit'")
+
+    async def control(self, on: bool):
+        """Control the overhead stirrer motor."""
+        await self._write(self.START_MOTOR if on else self.STOP_MOTOR)
+
+    async def reset(self):
+        """Reset the overhead stirrer."""
+        await self._write(self.RESET)
 
 
 class HotplateProtocol():

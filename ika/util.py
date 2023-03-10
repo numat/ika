@@ -94,7 +94,9 @@ class TcpClient():
                         return None
                     elif 'STATUS_2' in command:
                         raise NotImplementedError  # not sure how to interpret response of '-90 2'
-                    elif 'STATUS' in command:
+                    elif 'STATUS_4' in command:  # overhead stirrer
+                        return response[0] == '1'
+                    elif 'STATUS' in command:  # hotplate
                         return response[0:2] == '11'  # undocumented, 11 = active, 12 = inactive
                     return float(response[:-2])  # strip response command readback
                 except asyncio.exceptions.IncompleteReadError:
