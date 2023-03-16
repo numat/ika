@@ -22,9 +22,13 @@ setup(
     install_requires=[],
     extras_require={
         'test': [
-            'pytest',
-            'pytest-cov',
-            'pytest-asyncio',
+            'pytest>=6,<8',
+            'pytest-cov>=4,<5',
+            'pytest-asyncio==0.*',
+            'pytest-xdist==3.*',
+            'flake8==6.*',
+            'flake8-docstrings==1.*',
+            'mypy==1.0.1',
         ],
     },
     entry_points={
