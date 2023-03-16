@@ -81,7 +81,6 @@ class TcpClient():
             if self.open:
                 try:
                     response = await self._handle_communication(command)
-                    print("command:", command, ", response:", response)
                     if response is None:
                         return None
                     elif 'IN_NAME' in command or 'TYPE' in command:
@@ -119,7 +118,6 @@ class TcpClient():
             self.lock = asyncio.Lock()
         async with self.lock:  # lock releases on CancelledError
             await self._handle_connection()
-            print(command)
             await self._handle_communication(command)
 
     async def _clear(self):
