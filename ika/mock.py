@@ -16,6 +16,14 @@ class AsyncClientMock(MagicMock):
         """Convert regular mocks into into an async coroutine."""
         return super().__call__(*args, **kwargs)
 
+    async def __aenter__(self, *args):
+        """Set up connection."""
+        return self
+
+    async def __aexit__(self, *args):
+        """Close connection."""
+        pass
+
 
 class OverheadStirrer(RealOverheadStirrer):
     """Mocks the overhead stirrer driver for offline testing."""
@@ -36,14 +44,6 @@ class OverheadStirrer(RealOverheadStirrer):
             'torque': 0.0,
             'temp': 0.0,
         }
-
-    async def __aenter__(self, *args):
-        """Set up connection."""
-        return self
-
-    async def __aexit__(self, *args):
-        """Close connection."""
-        pass
 
     async def _write_and_read(self, command):
         if command == self.READ_DEVICE_NAME:
@@ -105,14 +105,6 @@ class Hotplate(RealHotplate):
                 "active": False,
             },
         }
-
-    async def __aenter__(self, *args):
-        """Set up connection."""
-        return self
-
-    async def __aexit__(self, *args):
-        """Close connection."""
-        pass
 
     async def _write_and_read(self, command):
         await asyncio.sleep(uniform(0.0, 0.1))
