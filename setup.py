@@ -10,7 +10,7 @@ with open('README.md', 'r') as in_file:
     long_description = in_file.read()
 
 setup(
-    name="ika",
+    name="ika-control",
     version="0.1.0",
     description="Python driver for IKA instruments.",
     long_description=long_description,
