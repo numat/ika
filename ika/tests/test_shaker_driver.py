@@ -7,11 +7,13 @@ import pytest
 from ika import command_line
 from ika.mock import Shaker
 
+ADDRESS = 'fakeip:123'
+
 
 @pytest.fixture
 def driver():
     """Confirm the orbital shaker correctly initializes."""
-    return Shaker('fakeip')
+    return Shaker(ADDRESS)
 
 
 @pytest.fixture
@@ -35,7 +37,7 @@ def expected_info_response():
 @mock.patch('ika.Shaker', Shaker)
 def test_driver_cli_with_info(capsys):
     """Confirm the commandline interface works."""
-    command_line(['fakeip', '--type', 'shaker'])
+    command_line([ADDRESS, '--type', 'shaker'])
     captured = capsys.readouterr()
     assert "speed" in captured.out
     assert "name" in captured.out
@@ -44,7 +46,7 @@ def test_driver_cli_with_info(capsys):
 @mock.patch('ika.Shaker', Shaker)
 def test_driver_cli(capsys):
     """Confirm the commandline interface works with --no-info."""
-    command_line(['fakeip', '--type', 'hotplate', '--no-info'])
+    command_line([ADDRESS, '--type', 'hotplate', '--no-info'])
     captured = capsys.readouterr()
     assert "speed" in captured.out
     assert "name" not in captured.out
@@ -58,7 +60,7 @@ async def test_get_response(driver, expected_info_response):
 async def test_readme_example(expected_info_response):
     """Confirm the readme example using an async context manager works."""
     async def get():
-        async with Shaker('shaker-ip.local') as device:
+        async with Shaker(ADDRESS) as device:
             response = await device.get()       # Get speed, torque, temp, setpoints
             assert "speed" in response
             assert expected_info_response == await device.get_info()  # Get name
@@ -68,7 +70,7 @@ async def test_readme_example(expected_info_response):
 async def test_setpoint_roundtrip():
     """Confirm that the setpoint can be updated."""
     async def get():
-        async with Shaker('speed-ip.local') as device:
+        async with Shaker(ADDRESS) as device:
             with pytest.raises(ValueError):
                 await device.set_speed(setpoint=-1)
             with pytest.raises(ValueError):
@@ -82,7 +84,7 @@ async def test_setpoint_roundtrip():
 async def test_start_stop():
     """Confirm that the shaker motor can be controlled."""
     async def get():
-        async with Shaker('shaker-ip.local') as device:
+        async with Shaker(ADDRESS) as device:
             assert await device.get_running() is False
             await device.control(on=True)
             assert await device.get_running() is True

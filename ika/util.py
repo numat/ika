@@ -19,14 +19,17 @@ class TcpClient():
     communicating over TCP.
     """
 
-    def __init__(self, ip, port, eol='\r\n'):
+    def __init__(self, address, eol='\r\n'):
         """Set connection parameters.
 
         Connection is handled asynchronously, either using `async with` or
         behind the scenes on the first `await` call.
         """
-        self.ip = ip
-        self.port = port
+        try:
+            self.address, port = address.split(':')
+        except ValueError:
+            raise ValueError('address must be hostname:port')
+        self.port = int(port)
         self.eol = eol.encode()
         self.open = False
         self.reconnecting = False
@@ -60,7 +63,7 @@ class TcpClient():
     async def _connect(self):
         """Asynchronously open a TCP connection with the server."""
         self.close()
-        reader, writer = await asyncio.open_connection(self.ip, self.port)
+        reader, writer = await asyncio.open_connection(self.address, self.port)
         self.connection = {'reader': reader, 'writer': writer}
         self.open = True
 
@@ -136,7 +139,7 @@ class TcpClient():
             self.reconnecting = False
         except (asyncio.TimeoutError, OSError):
             if not self.reconnecting:
-                logger.error(f'Connecting to {self.ip} timed out.')
+                logger.error(f'Connecting to {self.address} timed out.')
             self.reconnecting = True
 
     async def _handle_communication(self, command):
@@ -151,7 +154,7 @@ class TcpClient():
         except (asyncio.TimeoutError, TypeError, OSError):
             self.timeouts += 1
             if self.timeouts == self.max_timeouts:
-                logger.error(f'Reading from {self.ip} timed out '
+                logger.error(f'Reading from {self.address} timed out '
                              f'{self.timeouts} times.')
                 self.close()
             return None

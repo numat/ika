@@ -14,9 +14,7 @@ def command_line(args=None):
     import json
 
     parser = argparse.ArgumentParser(description="Read device status.")
-    parser.add_argument('address', help="The IP address of the device.")
-    parser.add_argument('-p', '--port', help="The port of the device (default 23)",
-                        type=int, default=23)
+    parser.add_argument('address', type=str, help="The target TCP address:port")
     parser.add_argument('-t', '--type', help="The type of device (default 'overhead')",
                         type=str, default='overhead')
     parser.add_argument('-n', '--no-info', action='store_true', help="Exclude "
@@ -24,14 +22,14 @@ def command_line(args=None):
     args = parser.parse_args(args)
     if args.type == 'overhead':
         async def get():
-            async with OverheadStirrer(args.address, args.port) as device:
+            async with OverheadStirrer(args.address) as device:
                 d = await device.get()
                 if not args.no_info:
                     d['info'] = await device.get_info()
                 print(json.dumps(d, indent=4))
     elif args.type == 'hotplate':
         async def get():
-            async with Hotplate(args.address, args.port,
+            async with Hotplate(args.address,
                                 include_surface_control=not args.no_info) as device:
                 d = await device.get()
                 if not args.no_info:

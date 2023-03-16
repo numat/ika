@@ -47,14 +47,6 @@ class OverheadStirrerProtocol():
 class OverheadStirrer(TcpClient, OverheadStirrerProtocol):
     """Driver for IKA overhead stirrer."""
 
-    def __init__(self, ip: str, port: int = 23):
-        """Set up connection parameters, IP address and port."""
-        self.units = None
-        if ":" in ip:
-            port = int(ip.split(":")[1])
-            ip = ip.split(':')[0]
-        super().__init__(ip, port)
-
     async def get(self):
         """Get overhead stirrer speed, torque, and external temperature reading."""
         speed = await self._write_and_read(self.READ_ACTUAL_SPEED)
@@ -165,13 +157,9 @@ class HotplateProtocol():
 class Hotplate(TcpClient, HotplateProtocol):
     """Driver for IKA hotplate stirrer."""
 
-    def __init__(self, ip: str, port: int = 23, include_surface_control=False):
+    def __init__(self, address, include_surface_control=False):
         """Set up connection parameters, IP address and port."""
-        self.units = None
-        if ":" in ip:
-            port = int(ip.split(":")[1])
-            ip = ip.split(':')[0]
-        super().__init__(ip, port)
+        super().__init__(address)
         self.include_surface_control = include_surface_control
 
     async def get(self, include_surface_control=False):

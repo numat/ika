@@ -7,11 +7,13 @@ import pytest
 from ika import command_line
 from ika.mock import Hotplate
 
+ADDRESS = 'fakeip:123'
+
 
 @pytest.fixture
 def driver():
     """Confirm the hotplate correctly initializes."""
-    return Hotplate('fakeip')
+    return Hotplate(ADDRESS)
 
 
 @pytest.fixture
@@ -27,7 +29,7 @@ def expected_info_response():
 @mock.patch('ika.Hotplate', Hotplate)
 def test_driver_cli_with_info(capsys):
     """Confirm the commandline interface works."""
-    command_line(['fakeip', '--type', 'hotplate'])
+    command_line([ADDRESS, '--type', 'hotplate'])
     captured = capsys.readouterr()
     assert "temp_limit" in captured.out
     assert "name" in captured.out
@@ -36,7 +38,7 @@ def test_driver_cli_with_info(capsys):
 @mock.patch('ika.Hotplate', Hotplate)
 def test_driver_cli(capsys):
     """Confirm the commandline interface works with --no-info."""
-    command_line(['fakeip', '--type', 'hotplate', '--no-info'])
+    command_line([ADDRESS, '--type', 'hotplate', '--no-info'])
     captured = capsys.readouterr()
     assert "temp" in captured.out
     assert "name" not in captured.out
@@ -50,7 +52,7 @@ async def test_get_response(driver, expected_info_response):
 async def test_readme_example(expected_info_response):
     """Confirm the readme example using an async context manager works."""
     async def get():
-        async with Hotplate('hotplate-ip.local') as device:
+        async with Hotplate(ADDRESS) as device:
             response = await device.get()       # Get speed, torque, temp, setpoints
             assert "process_temp" in response
             assert expected_info_response == await device.get_info()  # Get name
@@ -60,7 +62,7 @@ async def test_readme_example(expected_info_response):
 async def test_setpoint_roundtrip():
     """Confirm that setpoints can be updated."""
     async def get():
-        async with Hotplate('hotplate-ip.local', include_surface_control=True) as device:
+        async with Hotplate(ADDRESS, include_surface_control=True) as device:
             process_sp = round(uniform(15, 100), 2)
             surface_sp = round(uniform(30, 150), 2)
             await device.set(equipment='process', setpoint=process_sp)
@@ -74,7 +76,7 @@ async def test_setpoint_roundtrip():
 async def test_start_stop():
     """Confirm that the heater and shaker motor can be controlled."""
     async def get():
-        async with Hotplate('hotplate-ip.local') as device:
+        async with Hotplate(ADDRESS) as device:
             response = await device.get()
             assert response['process_temp']['active'] is False
             assert response['speed']['active'] is False

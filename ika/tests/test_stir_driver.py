@@ -7,14 +7,13 @@ import pytest
 from ika import command_line
 from ika.mock import OverheadStirrer
 
-ADDRESS = '192.168.10.12'
-PORT = 26
+ADDRESS = '192.168.10.12:23'
 
 
 @pytest.fixture
 def driver():
     """Confirm the overhead stirrer correctly initializes."""
-    return OverheadStirrer(ADDRESS, PORT)
+    return OverheadStirrer(ADDRESS)
 
 
 @pytest.fixture
@@ -30,7 +29,7 @@ def expected_response():
 @mock.patch('ika.OverheadStirrer', OverheadStirrer)
 def test_driver_cli_with_info(capsys):
     """Confirm the commandline interface works."""
-    command_line([ADDRESS, '-p', str(PORT), '-t', 'overhead'])
+    command_line([ADDRESS, '-t', 'overhead'])
     captured = capsys.readouterr()
     assert "torque" in captured.out
     assert "name" in captured.out
@@ -39,7 +38,7 @@ def test_driver_cli_with_info(capsys):
 @mock.patch('ika.OverheadStirrer', OverheadStirrer)
 def test_driver_cli(capsys):
     """Confirm the commandline interface works with --no-info."""
-    command_line([ADDRESS, '-p', str(PORT), '-t', 'overhead', '--no-info'])
+    command_line([ADDRESS, '-t', 'overhead', '--no-info'])
     captured = capsys.readouterr()
     assert "torque" in captured.out
     assert "name" not in captured.out
@@ -53,7 +52,7 @@ async def test_get_response(driver, expected_response):
 async def test_readme_example(expected_response):
     """Confirm the readme example using an async context manager works."""
     async def get():
-        async with OverheadStirrer(ADDRESS, PORT) as device:
+        async with OverheadStirrer(ADDRESS) as device:
             await device.get()       # Get speed, torque, temp
             assert expected_response == await device.get_info()  # Get name
     await get()
@@ -62,7 +61,7 @@ async def test_readme_example(expected_response):
 async def test_setpoint_roundtrip():
     """Confirm that setpoints can be updated."""
     async def get():
-        async with OverheadStirrer(ADDRESS, PORT) as device:
+        async with OverheadStirrer(ADDRESS) as device:
             speed_sp = randint(30, 200)
             speed_limit = randint(50, 2000)
             torque_limit = randint(5, 60)
@@ -80,7 +79,7 @@ async def test_setpoint_roundtrip():
 async def test_start_stop():
     """Confirm that the stirrer motor can be controlled."""
     async def get():
-        async with OverheadStirrer(ADDRESS, PORT) as device:
+        async with OverheadStirrer(ADDRESS) as device:
             await device.control(on=True)
             response = await device.get()
             assert response['speed']['active'] is True
@@ -95,7 +94,7 @@ async def test_start_stop():
 async def test_reset():
     """Confirm that the reset functionality works."""
     async def get():
-        async with OverheadStirrer(ADDRESS, PORT) as device:
+        async with OverheadStirrer(ADDRESS) as device:
             await device.reset()
             raise NotImplementedError
     await get()
