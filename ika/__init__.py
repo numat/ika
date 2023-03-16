@@ -35,7 +35,14 @@ def command_line(args=None):
                 if not args.no_info:
                     d['info'] = await device.get_info()
                 print(json.dumps(d, indent=4))
-    elif args.type in ['vacuum, shaker']:
+    elif args.type == 'vacuum':
+        async def get():
+            async with Vacuum(args.address) as device:
+                d = await device.get()
+                if not args.no_info:
+                    d['info'] = await device.get_info()
+                print(json.dumps(d, indent=4))
+    elif args.type in ['shaker']:
         raise NotImplementedError((f"Not implemented yet for device type: {args.type}"))
     else:
         raise ValueError(f"Unsupported device type: {args.type}")

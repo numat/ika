@@ -27,7 +27,7 @@ def expected_response():
 @mock.patch('ika.Vacuum', Vacuum)
 def test_driver_cli_with_info(capsys):
     """Confirm the commandline interface works."""
-    command_line([ADDRESS])
+    command_line([ADDRESS, '--type', 'vacuum'])
     captured = capsys.readouterr()
     assert "pressure" in captured.out
     assert "name" in captured.out
@@ -36,7 +36,7 @@ def test_driver_cli_with_info(capsys):
 @mock.patch('ika.Vacuum', Vacuum)
 def test_driver_cli(capsys):
     """Confirm the commandline interface works with --no-info."""
-    command_line([ADDRESS])
+    command_line([ADDRESS, '--type', 'vacuum', '--no-info'])
     captured = capsys.readouterr()
     assert "pressure" in captured.out
     assert "name" not in captured.out
