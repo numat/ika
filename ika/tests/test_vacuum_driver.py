@@ -54,3 +54,15 @@ async def test_readme_example(expected_response):
             await device.get()
             assert expected_response == await device.get_info()  # Get name
     await get()
+
+
+async def test_start_stop():
+    """Confirm that the vacuum motor can be controlled."""
+    async def get():
+        async with Vacuum(ADDRESS) as device:
+            assert await device.get_running() is False
+            await device.control(on=True)
+            assert await device.get_running() is True
+            await device.control(on=False)
+            assert await device.get_running() is False
+    await get()
