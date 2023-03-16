@@ -36,7 +36,7 @@ class OverheadStirrerProtocol():
     START_MOTOR = "START_4"  # start stirring
     STOP_MOTOR = "STOP_4"  # stop stirring
     READ_MOTOR_STATUS = "STATUS_4"  # running status, undocumented in manual
-    SWITCH_TO_NORMAL_OPERATING_MODE = 'RESET'
+    RESET = 'RESET'
     # todo change the direction or rotation with "OUT_MODE_n" (n = 1 or 2).
     # doesn't seem to work with the microstar C
     SET_ROTATION_CLOCKWISE = "OUT_MODE_1"
@@ -298,7 +298,7 @@ class VacuumProtocol:
     # Set PC communication watchdog time 2: 'OUT_WD1@'
     # Set the PC safety pump rate: 'OUT_WD2@'
     # Set the PC safety pressure: 'OUT_SP_41'
-    SWITCH_TO_NORMAL_OPERATING_MODE = 'RESET'
+    RESET = 'RESET'
     # Starts the measurement: 'START_66'
     # Stops the measurement: 'STOP_66'
     # Starts IAP mode: 'ENTER_IAP'
