@@ -2,7 +2,7 @@
 
 import asyncio
 from random import uniform
-from typing import Dict, Union
+from typing import Any, Dict, Union
 from unittest.mock import MagicMock
 
 from .driver import Hotplate as RealHotplate
@@ -24,7 +24,7 @@ class OverheadStirrer(RealOverheadStirrer):
         """Set up connection parameters with default port."""
         super().__init__(*args, **kwargs)
         self.client = AsyncClientMock()
-        self.state = {
+        self.state: Dict[str, Any] = {
             'name': 'STIRR GO WHIRRR',
             'torque_limit': 60.0,
             'speed_limit': 2000.0,
