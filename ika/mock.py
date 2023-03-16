@@ -25,9 +25,16 @@ class OverheadStirrer(RealOverheadStirrer):
         super().__init__(*args, **kwargs)
         self.client = AsyncClientMock()
         self.state = {
-            "name": "STIRR GO WHIRRR",
-            "torque_limit": 60.0,
-            "speed_limit": 2000.0,
+            'name': 'STIRR GO WHIRRR',
+            'torque_limit': 60.0,
+            'speed_limit': 2000.0,
+            'speed': {
+                'setpoint': 0.0,
+                'actual': 0.0,
+                'active': False,
+            },
+            'torque': 0.0,
+            'temp': 0.0,
         }
 
     async def __aenter__(self, *args):
@@ -51,6 +58,25 @@ class OverheadStirrer(RealOverheadStirrer):
             return round(uniform(0, 10), 2)
         elif command == self.READ_PT1000:
             return round(uniform(15, 60), 2)
+        elif command == self.READ_MOTOR_STATUS:
+            return self.state['speed']['active']
+        elif command == self.READ_SET_SPEED:
+            return self.state['speed']['setpoint']
+
+    async def _write(self, command):
+        await asyncio.sleep(uniform(0.0, 0.1))
+        if command == self.START_MOTOR:
+            self.state['speed']['active'] = True
+        elif command == self.STOP_MOTOR:
+            self.state['speed']['active'] = False
+        else:
+            command, value = command.split(" ")
+        if command == self.SET_SPEED.strip():
+            self.state['speed']['setpoint'] = float(value)
+        elif command == self.SET_SPEED_LIMIT.strip():
+            self.state['speed_limit'] = float(value)
+        elif command == self.SET_TORQUE_LIMIT.strip():
+            self.state['torque_limit'] = float(value)
 
 
 class Hotplate(RealHotplate):
