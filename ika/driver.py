@@ -7,7 +7,7 @@ from ika.util import TcpClient
 logger = logging.getLogger('ika')
 
 
-class OverheadStirrerProtocol():
+class OverheadStirrerProtocol:
     """Protocol for communicating with an overhead stirrer.
 
     Command syntax and format from the manual:
@@ -98,7 +98,7 @@ class OverheadStirrer(TcpClient, OverheadStirrerProtocol):
         await self._write(self.RESET)
 
 
-class HotplateProtocol():
+class HotplateProtocol:
     """Protocol for communicating with an overhead stirrer.
 
     Command syntax and format from the manual:
