@@ -57,16 +57,17 @@ class OverheadStirrer(RealOverheadStirrer):
             return self.state['speed']['active']
         elif command == self.READ_SET_SPEED:
             return self.state['speed']['setpoint']
+        elif command == self.START_MOTOR:
+            self.state['speed']['active'] = True
+            return self.START_MOTOR
+        elif command == self.STOP_MOTOR:
+            self.state['speed']['active'] = False
+            return self.STOP_MOTOR
 
     async def command(self, command):
         """Update mock state with commands."""
         await asyncio.sleep(uniform(0.0, 0.1))
-        if command == self.START_MOTOR:
-            self.state['speed']['active'] = True
-        elif command == self.STOP_MOTOR:
-            self.state['speed']['active'] = False
-        else:
-            command, value = command.split(" ")
+        command, value = command.split(" ")
         if command == self.SET_SPEED.strip():
             self.state['speed']['setpoint'] = float(value)
         elif command == self.SET_SPEED_LIMIT.strip():
