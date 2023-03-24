@@ -122,7 +122,7 @@ class TcpClient(Client):
     communicating over TCP.
     """
 
-    def __init__(self, address, timeout=0.1):
+    def __init__(self, address, timeout=1):
         """Communicator using a TCP/IP<=>serial gateway."""
         super().__init__(timeout)
         try:
@@ -178,7 +178,7 @@ class TcpClient(Client):
         """Automatically maintain TCP connection."""
         try:
             if not self.open:
-                await asyncio.wait_for(self._connect(), timeout=0.5)
+                await asyncio.wait_for(self._connect(), timeout=0.75)
             self.reconnecting = False
         except (asyncio.TimeoutError, OSError):
             if not self.reconnecting:
@@ -190,7 +190,7 @@ class TcpClient(Client):
         try:
             await self._write(command)
             future = self._readline()
-            result = await asyncio.wait_for(future, timeout=0.5)
+            result = await asyncio.wait_for(future, timeout=0.75)
             self.timeouts = 0
             return result
         except (asyncio.TimeoutError, TypeError, OSError):
