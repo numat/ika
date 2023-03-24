@@ -172,7 +172,7 @@ class TcpClient(Client):
         handle recovering from disconnects.
         """
         await self._handle_connection()
-        await self.connection['writer'].write(command.encode() + self.eol)
+        self.connection['writer'].write(command.encode() + self.eol)
 
     async def _handle_connection(self):
         """Automatically maintain TCP connection."""
