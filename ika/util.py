@@ -13,9 +13,10 @@ logger = logging.getLogger('ika')
 
 
 class Client:
+    """Serial or TCP client."""
 
     def __init__(self, timeout):
-        """Serial or TCP client."""
+        """Initialize common attributes."""
         self.address = ''
         self.open = False
         self.timeout = timeout
