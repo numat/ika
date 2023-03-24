@@ -7,6 +7,8 @@ from unittest.mock import MagicMock
 
 from .driver import Hotplate as RealHotplate
 from .driver import OverheadStirrer as RealOverheadStirrer
+from .driver import Shaker as RealShaker
+from .driver import Vacuum as RealVacuum
 
 
 class AsyncClientMock(MagicMock):
@@ -16,14 +18,6 @@ class AsyncClientMock(MagicMock):
         """Convert regular mocks into into an async coroutine."""
         return super().__call__(*args, **kwargs)
 
-    async def __aenter__(self, *args):
-        """Set up connection."""
-        return self
-
-    async def __aexit__(self, *args):
-        """Close connection."""
-        pass
-
 
 class OverheadStirrer(RealOverheadStirrer):
     """Mocks the overhead stirrer driver for offline testing."""
@@ -31,7 +25,7 @@ class OverheadStirrer(RealOverheadStirrer):
     def __init__(self, *args, **kwargs):
         """Set up connection parameters with default port."""
         super().__init__(*args, **kwargs)
-        self.client = AsyncClientMock()
+        self.hw = AsyncClientMock()
         self.state: Dict[str, Any] = {
             'name': 'STIRR GO WHIRRR',
             'torque_limit': 60.0,
@@ -45,7 +39,8 @@ class OverheadStirrer(RealOverheadStirrer):
             'temp': 0.0,
         }
 
-    async def _write_and_read(self, command):
+    async def query(self, command):
+        """Return mock requests to queries."""
         if command == self.READ_DEVICE_NAME:
             return self.state['name']
         elif command == self.READ_TORQUE_LIMIT:
@@ -62,15 +57,17 @@ class OverheadStirrer(RealOverheadStirrer):
             return self.state['speed']['active']
         elif command == self.READ_SET_SPEED:
             return self.state['speed']['setpoint']
-
-    async def _write(self, command):
-        await asyncio.sleep(uniform(0.0, 0.1))
-        if command == self.START_MOTOR:
+        elif command == self.START_MOTOR:
             self.state['speed']['active'] = True
+            return self.START_MOTOR
         elif command == self.STOP_MOTOR:
             self.state['speed']['active'] = False
-        else:
-            command, value = command.split(" ")
+            return self.STOP_MOTOR
+
+    async def command(self, command):
+        """Update mock state with commands."""
+        await asyncio.sleep(uniform(0.0, 0.1))
+        command, value = command.split(" ")
         if command == self.SET_SPEED.strip():
             self.state['speed']['setpoint'] = float(value)
         elif command == self.SET_SPEED_LIMIT.strip():
@@ -85,7 +82,7 @@ class Hotplate(RealHotplate):
     def __init__(self, *args, **kwargs):
         """Set up connection parameters with default port."""
         super().__init__(*args, **kwargs)
-        self.client = AsyncClientMock()
+        self.hw = AsyncClientMock()
         self.state: Dict[str, Dict[str, Union[bool, float, str]]] = {
             "info": {
                 "name": "SPINNY HOT THING",
@@ -106,7 +103,8 @@ class Hotplate(RealHotplate):
             },
         }
 
-    async def _write_and_read(self, command):
+    async def query(self, command):
+        """Return mock requests to queries."""
         await asyncio.sleep(uniform(0.0, 0.1))
         if command == self.READ_DEVICE_NAME:
             return self.state["info"]["name"]
@@ -133,7 +131,8 @@ class Hotplate(RealHotplate):
         elif command == self.READ_SURFACE_HEATER_STATUS:
             return self.state["surface_temp"]["active"]
 
-    async def _write(self, command):
+    async def command(self, command):
+        """Update mock state with commands."""
         await asyncio.sleep(uniform(0.0, 0.1))
         if command == self.START_THE_MOTOR:
             self.state["speed"]["active"] = True
@@ -151,9 +150,9 @@ class Hotplate(RealHotplate):
             self.state["surface_temp"]["setpoint"] = float(value)
 
 
-class Shaker(AsyncClientMock):
+class Shaker(RealShaker):
     """Mocks the orbital shaker driver for offline testing."""
 
 
-class Vacuum(AsyncClientMock):
+class Vacuum(RealVacuum):
     """Mocks the vacuum driver for offline testing."""
