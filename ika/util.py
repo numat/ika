@@ -3,10 +3,7 @@
 Distributed under the GNU General Public License v3
 Copyright (C) 2022 NuMat Technologies
 """
-try:
-    import asyncio
-except ImportError:
-    raise ImportError("TCP connections require python >=3.5.")
+import asyncio
 import logging
 
 logger = logging.getLogger('ika')
