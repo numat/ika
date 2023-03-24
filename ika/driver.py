@@ -43,7 +43,7 @@ class IKADevice(ABC):
             await self.hw._write(command)
 
     async def reset(self) -> None:
-        """Reset the device pump."""
+        """Reset the device."""
         await self.command('RESET')
 
 
