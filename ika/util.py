@@ -176,9 +176,10 @@ class TcpClient(Client):
 
     async def _handle_connection(self):
         """Automatically maintain TCP connection."""
+        if self.open:
+            return
         try:
-            if not self.open:
-                await asyncio.wait_for(self._connect(), timeout=0.75)
+            await asyncio.wait_for(self._connect(), timeout=0.75)
             self.reconnecting = False
         except (asyncio.TimeoutError, OSError):
             if not self.reconnecting:
