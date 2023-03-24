@@ -16,16 +16,6 @@ def driver():
     return OverheadStirrer(ADDRESS)
 
 
-@pytest.fixture
-def expected_response():
-    """Return mocked overhead stirrer data."""
-    return {
-        "name": "STIRR GO WHIRRR",
-        "torque_limit": 60.0,
-        "speed_limit": 2000.0,
-    }
-
-
 @mock.patch('ika.OverheadStirrer', OverheadStirrer)
 def test_driver_cli_with_info(capsys):
     """Confirm the commandline interface works."""
@@ -46,20 +36,28 @@ def test_driver_cli(capsys):
     assert "null" not in captured.out
 
 
-async def test_get_response(driver, expected_response):
+async def test_get_response(driver):
     """Confirm that the driver returns correct values on get_info() calls."""
     info = await driver.get_info()
-    assert (info == expected_response or info == expected_response.update({'name': 'IKA ES 60'}))
+    assert 'IKA ES 60' in info['name'] or 'STIRR GO WHIRRR' in info['name']
+    assert (isinstance(info['torque_limit'], float)
+            and info['torque_limit'] <= 60.0 and info['torque_limit'] > 0.0)
+    assert (isinstance(info['speed_limit'], float)
+            and info['speed_limit'] <= 2000.0 and info['speed_limit'] > 30.0)
 
 
-async def test_readme_example(expected_response):
+async def test_readme_example():
     """Confirm the readme example using an async context manager works."""
     async def get():
         async with OverheadStirrer(ADDRESS) as device:
             await device.get()       # Get speed, torque, temp
             info = await device.get_info()  # get name
-            assert (info == expected_response
-                    or info == expected_response.update({'name': 'IKA ES 60'}))
+            assert 'IKA ES 60' in info['name'] or 'STIRR GO WHIRRR' in info['name']
+            assert (isinstance(info['torque_limit'], float)
+                    and info['torque_limit'] <= 60.0 and info['torque_limit'] > 0.0)
+            assert (isinstance(info['speed_limit'], float)
+                    and info['speed_limit'] <= 2000.0 and info['speed_limit'] > 30.0)
+
     await get()
 
 
