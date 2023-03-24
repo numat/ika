@@ -25,7 +25,7 @@ class OverheadStirrer(RealOverheadStirrer):
     def __init__(self, *args, **kwargs):
         """Set up connection parameters with default port."""
         super().__init__(*args, **kwargs)
-        self.client = AsyncClientMock()
+        self.hw = AsyncClientMock()
         self.state: Dict[str, Any] = {
             'name': 'STIRR GO WHIRRR',
             'torque_limit': 60.0,
@@ -39,7 +39,7 @@ class OverheadStirrer(RealOverheadStirrer):
             'temp': 0.0,
         }
 
-    async def _write_and_read(self, command):
+    async def query(self, command):
         """Return mock requests to queries."""
         if command == self.READ_DEVICE_NAME:
             return self.state['name']
@@ -58,7 +58,7 @@ class OverheadStirrer(RealOverheadStirrer):
         elif command == self.READ_SET_SPEED:
             return self.state['speed']['setpoint']
 
-    async def _write(self, command):
+    async def command(self, command):
         """Update mock state with commands."""
         await asyncio.sleep(uniform(0.0, 0.1))
         if command == self.START_MOTOR:
@@ -81,7 +81,7 @@ class Hotplate(RealHotplate):
     def __init__(self, *args, **kwargs):
         """Set up connection parameters with default port."""
         super().__init__(*args, **kwargs)
-        self.client = AsyncClientMock()
+        self.hw = AsyncClientMock()
         self.state: Dict[str, Dict[str, Union[bool, float, str]]] = {
             "info": {
                 "name": "SPINNY HOT THING",
@@ -102,7 +102,7 @@ class Hotplate(RealHotplate):
             },
         }
 
-    async def _write_and_read(self, command):
+    async def query(self, command):
         """Return mock requests to queries."""
         await asyncio.sleep(uniform(0.0, 0.1))
         if command == self.READ_DEVICE_NAME:
@@ -130,7 +130,7 @@ class Hotplate(RealHotplate):
         elif command == self.READ_SURFACE_HEATER_STATUS:
             return self.state["surface_temp"]["active"]
 
-    async def _write(self, command):
+    async def command(self, command):
         """Update mock state with commands."""
         await asyncio.sleep(uniform(0.0, 0.1))
         if command == self.START_THE_MOTOR:

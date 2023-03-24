@@ -1,10 +1,50 @@
 """IKA TCP adapter for overhead stirrers and hotplates."""
 
+import asyncio
 import logging
+from abc import ABC
 
-from ika.util import TcpClient
+from ika.util import Client, SerialClient, TcpClient
 
 logger = logging.getLogger('ika')
+
+
+class IKADevice(ABC):
+    """Abstract base class for IKA devices."""
+
+    def __init__(self, address, **kwargs):
+        """Set up connection parameters, serial or IP address and port."""
+        if address.startswith('/dev') or address.startswith('COM'):  # serial
+            self.hw: Client = SerialClient(address=address, **kwargs)
+        else:
+            self.hw = TcpClient(address=address, **kwargs)
+        self.lock = None  # needs to be initialized later, when the event loop exists
+
+    async def __aenter__(self, *args):
+        """Provide async enter to context manager."""
+        return self
+
+    async def __aexit__(self, *args):
+        """Provide async exit to context manager."""
+        return
+
+    async def query(self, query) -> str:
+        """Query the device and return its response."""
+        if not self.lock:
+            self.lock = asyncio.Lock()
+        async with self.lock:  # lock releases on CancelledError
+            return await self.hw._write_and_read(query)
+
+    async def command(self, command) -> None:
+        """Send a command to the device and don't expect a response."""
+        if not self.lock:
+            self.lock = asyncio.Lock()
+        async with self.lock:  # lock releases on CancelledError
+            await self.hw._write(command)
+
+    async def reset(self) -> None:
+        """Reset the device pump."""
+        await self.command('RESET')
 
 
 class OverheadStirrerProtocol:
@@ -44,16 +84,16 @@ class OverheadStirrerProtocol:
     READ_ROTATION_DIRECTION = "IN_MODE"  # todo doesn't seem to work with the microstar C
 
 
-class OverheadStirrer(TcpClient, OverheadStirrerProtocol):
+class OverheadStirrer(OverheadStirrerProtocol, IKADevice):
     """Driver for IKA overhead stirrer."""
 
     async def get(self):
         """Get overhead stirrer speed, torque, and external temperature reading."""
-        speed = await self._write_and_read(self.READ_ACTUAL_SPEED)
-        speed_sp = await self._write_and_read(self.READ_SET_SPEED)
-        motor_status = await self._write_and_read(self.READ_MOTOR_STATUS)
-        torque = await self._write_and_read(self.READ_ACTUAL_TORQUE)
-        temp = await self._write_and_read(self.READ_PT1000)
+        speed = await self.query(self.READ_ACTUAL_SPEED)
+        speed_sp = await self.query(self.READ_SET_SPEED)
+        motor_status = await self.query(self.READ_MOTOR_STATUS)
+        torque = await self.query(self.READ_ACTUAL_TORQUE)
+        temp = await self.query(self.READ_PT1000)
         # FIXME handle case where temp probe is unplugged
         response = {
             'speed': {
@@ -68,9 +108,9 @@ class OverheadStirrer(TcpClient, OverheadStirrerProtocol):
 
     async def get_info(self):
         """Get name and safety setpoints of overhead stirer."""
-        name = await self._write_and_read(self.READ_DEVICE_NAME)
-        torque_limit = await self._write_and_read(self.READ_TORQUE_LIMIT)
-        speed_limit = await self._write_and_read(self.READ_SPEED_LIMIT)
+        name = await self.query(self.READ_DEVICE_NAME)
+        torque_limit = await self.query(self.READ_TORQUE_LIMIT)
+        speed_limit = await self.query(self.READ_SPEED_LIMIT)
         response = {
             'name': name,
             'torque_limit': torque_limit,
@@ -81,21 +121,17 @@ class OverheadStirrer(TcpClient, OverheadStirrerProtocol):
     async def set(self, equipment='speed', setpoint=0):
         """Set a parameter to the specified value."""
         if equipment == 'speed':
-            await self._write(self.SET_SPEED + str(setpoint))
+            await self.command(self.SET_SPEED + str(setpoint))
         elif equipment == 'speed_limit':
-            await self._write(self.SET_SPEED_LIMIT + str(setpoint))
+            await self.command(self.SET_SPEED_LIMIT + str(setpoint))
         elif equipment == 'torque_limit':
-            await self._write(self.SET_TORQUE_LIMIT + str(setpoint))
+            await self.command(self.SET_TORQUE_LIMIT + str(setpoint))
         else:
             raise ValueError("Call with 'speed', 'speed_limit', or 'torque_limit'")
 
     async def control(self, on: bool):
         """Control the overhead stirrer motor."""
-        await self._write(self.START_MOTOR if on else self.STOP_MOTOR)
-
-    async def reset(self):
-        """Reset the overhead stirrer."""
-        await self._write(self.RESET)
+        await self.query(self.START_MOTOR if on else self.STOP_MOTOR)
 
 
 class HotplateProtocol:
@@ -154,28 +190,31 @@ class HotplateProtocol:
     # communicate with a Eurostar overhead stirrer over RS-232.
 
 
-class Hotplate(TcpClient, HotplateProtocol):
+class Hotplate(HotplateProtocol, IKADevice):
     """Driver for IKA hotplate stirrer."""
 
     def __init__(self, address, include_surface_control=False):
         """Set up connection parameters, IP address and port."""
-        super().__init__(address)
+        if address.startswith('/dev') or address.startswith('COM'):  # serial
+            self.hw: Client = SerialClient(address=address)
+        else:
+            self.hw = TcpClient(address=address)
         self.include_surface_control = include_surface_control
 
     async def get(self, include_surface_control=False):
         """Get hotplate speed, surface temperature, and process temperature readings."""
-        speed = await self._write_and_read(self.READ_ACTUAL_SPEED)
-        speed_sp = await self._write_and_read(self.READ_SPEED_SETPOINT)
-        process_temp = await self._write_and_read(self.READ_ACTUAL_PROCESS_TEMP)
-        process_temp_sp = await self._write_and_read(self.READ_PROCESS_TEMP_SETPOINT)
-        shaker_status = await self._write_and_read(self.READ_SHAKER_STATUS)
-        process_heater_status = await self._write_and_read(self.READ_PROCESS_HEATER_STATUS)
+        speed = await self.query(self.READ_ACTUAL_SPEED)
+        speed_sp = await self.query(self.READ_SPEED_SETPOINT)
+        process_temp = await self.query(self.READ_ACTUAL_PROCESS_TEMP)
+        process_temp_sp = await self.query(self.READ_PROCESS_TEMP_SETPOINT)
+        shaker_status = await self.query(self.READ_SHAKER_STATUS)
+        process_heater_status = await self.query(self.READ_PROCESS_HEATER_STATUS)
         surface_data = {
-            'actual': await self._write_and_read(self.READ_ACTUAL_SURFACE_TEMP)
+            'actual': await self.query(self.READ_ACTUAL_SURFACE_TEMP)
         }
         if self.include_surface_control:
-            surface_data['setpoint'] = await self._write_and_read(self.READ_SURFACE_TEMP_SETPOINT)
-            # surface_data['active'] = await self._write_and_read(self.READ_SURFACE_HEATER_STATUS)
+            surface_data['setpoint'] = await self.query(self.READ_SURFACE_TEMP_SETPOINT)
+            # surface_data['active'] = await self.query(self.READ_SURFACE_HEATER_STATUS)
             # FIXME figure out response value of '-90 02'
         # FIXME handle case where process temp probe is unplugged
         response = {
@@ -195,9 +234,9 @@ class Hotplate(TcpClient, HotplateProtocol):
 
     async def get_info(self):
         """Get name and safety setpoint of hotplate."""
-        name = await self._write_and_read(self.READ_DEVICE_NAME)
-        device_type = await self._write_and_read(self.READ_DEVICE_TYPE)
-        temp_limit = await self._write_and_read(self.READ_TEMP_LIMIT)
+        name = await self.query(self.READ_DEVICE_NAME)
+        device_type = await self.query(self.READ_DEVICE_TYPE)
+        temp_limit = await self.query(self.READ_TEMP_LIMIT)
         response = {
             'name': name,
             'device_type': device_type,
@@ -211,10 +250,10 @@ class Hotplate(TcpClient, HotplateProtocol):
         Note: direct control of surface temperature is not implemented.
         """
         if equipment == 'heater':
-            await self._write(self.START_THE_HEATER if on else self.STOP_THE_HEATER)
+            await self.command(self.START_THE_HEATER if on else self.STOP_THE_HEATER)
             # note - apparently after starting the heater it resets the setpoint to 0C
         elif equipment == 'motor':
-            await self._write(self.START_THE_MOTOR if on else self.STOP_THE_MOTOR)
+            await self.command(self.START_THE_MOTOR if on else self.STOP_THE_MOTOR)
         else:
             raise ValueError(f'Equipment "{equipment} invalid. '
                              'Must be either "heater" or "motor"')
@@ -222,22 +261,22 @@ class Hotplate(TcpClient, HotplateProtocol):
     async def set(self, equipment: str, setpoint: float):
         """Set a temperature or stirrer setpoint."""
         if equipment == 'process':
-            await self._write(self.SET_PROCESS_TEMP_SETPOINT + str(setpoint))
+            await self.command(self.SET_PROCESS_TEMP_SETPOINT + str(setpoint))
         elif equipment == 'surface':
-            await self._write(self.SET_SURFACE_TEMP_SETPOINT + str(setpoint))
+            await self.command(self.SET_SURFACE_TEMP_SETPOINT + str(setpoint))
         elif equipment == 'shaker':
             if setpoint < 50 or setpoint > 1700:
                 raise ValueError(f"Cannot set shaker to {setpoint}RPM. "
                                  "Minimum shaker setpoint is 50RPM and maximum is 1700RPM.")
             # setpoints can be written as a decimal but the shaker will round off to int
-            await self._write(self.SET_SPEED_SETPOINT + str(int(setpoint)))
+            await self.command(self.SET_SPEED_SETPOINT + str(int(setpoint)))
         else:
             raise ValueError(f'Equipment "{equipment} invalid. '
                              'Must be "process", "surface", or "shaker"')
 
     async def reset(self):
         """Reset the hotplate, and turn off the heater and stirrer."""
-        await self._write(self.RESET)
+        await self.command(self.RESET)
 
 
 class ShakerProtocol:
@@ -255,8 +294,10 @@ class ShakerProtocol:
     ...
 
 
-class Shaker(TcpClient, ShakerProtocol):
+class Shaker(ShakerProtocol, IKADevice):
     """Driver for IKA orbital shaker."""
+
+    ...
 
 
 class VacuumProtocol:
@@ -315,5 +356,7 @@ class VacuumProtocol:
     }
 
 
-class Vacuum(TcpClient, VacuumProtocol):
+class Vacuum(VacuumProtocol, IKADevice):
     """Driver for IKA vacuum pump."""
+
+    ...

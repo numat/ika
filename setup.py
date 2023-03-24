@@ -11,7 +11,7 @@ with open('README.md', 'r') as in_file:
 
 setup(
     name="ika-control",
-    version="0.1.0",
+    version="0.2.0",
     description="Python driver for IKA instruments.",
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -19,7 +19,7 @@ setup(
     author="Alex Ruddick",
     author_email="a.ruddick@numat-tech.com",
     packages=['ika'],
-    install_requires=[],
+    install_requires=['pyserial'],
     extras_require={
         'test': [
             'pytest>=6,<8',
