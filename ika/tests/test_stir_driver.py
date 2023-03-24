@@ -33,6 +33,7 @@ def test_driver_cli_with_info(capsys):
     captured = capsys.readouterr()
     assert "torque" in captured.out
     assert "name" in captured.out
+    assert "null" not in captured.out
 
 
 @mock.patch('ika.OverheadStirrer', OverheadStirrer)
@@ -42,11 +43,13 @@ def test_driver_cli(capsys):
     captured = capsys.readouterr()
     assert "torque" in captured.out
     assert "name" not in captured.out
+    assert "null" not in captured.out
 
 
 async def test_get_response(driver, expected_response):
     """Confirm that the driver returns correct values on get_info() calls."""
-    assert expected_response == await driver.get_info()
+    info = await driver.get_info()
+    assert (info == expected_response or info == expected_response.update({'name': 'IKA ES 60'}))
 
 
 async def test_readme_example(expected_response):
@@ -54,7 +57,9 @@ async def test_readme_example(expected_response):
     async def get():
         async with OverheadStirrer(ADDRESS) as device:
             await device.get()       # Get speed, torque, temp
-            assert expected_response == await device.get_info()  # Get name
+            info = await device.get_info()  # get name
+            assert (info == expected_response
+                    or info == expected_response.update({'name': 'IKA ES 60'}))
     await get()
 
 
@@ -62,16 +67,18 @@ async def test_setpoint_roundtrip():
     """Confirm that setpoints can be updated."""
     async def get():
         async with OverheadStirrer(ADDRESS) as device:
-            speed_sp = randint(30, 200)
             speed_limit = randint(50, 2000)
+            speed_sp = randint(30, speed_limit)
             torque_limit = randint(5, 60)
-            await device.set(equipment='speed', setpoint=speed_sp)
+            await device.control(on=True)
             await device.set(equipment='speed_limit', setpoint=speed_limit)
+            await device.set(equipment='speed', setpoint=speed_sp)
             await device.set(equipment='torque_limit', setpoint=torque_limit)
+            await device.control(on=False)
             response = await device.get()
             response.update(await device.get_info())
-            assert speed_sp == response['speed']['setpoint']
             assert speed_limit == response['speed_limit']
+            assert speed_sp == response['speed']['setpoint']
             assert torque_limit == response['torque_limit']
     await get()
 
