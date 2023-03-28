@@ -15,7 +15,7 @@ setup(
     description="Python driver for IKA instruments.",
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url="https://github.com/alexrudd2/ika/",
+    url="https://github.com/numat/ika/",
     author="Alex Ruddick",
     author_email="a.ruddick@numat-tech.com",
     packages=['ika'],
