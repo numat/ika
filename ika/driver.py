@@ -282,23 +282,86 @@ class Hotplate(HotplateProtocol, IKADevice):
 class ShakerProtocol:
     """Protocol for communicating with an orbital shaker.
 
+    RS-232 Information
+        - Transmission procedure: asynchronous character transmission in start-stop mode
+        - Type of transmission: full duplex
+        - 1 start bit; 7 character bits; 1 parity bit (even); 1 stop bit
+        - Transmission speed: 9600 bit/s
+
     Command syntax and format from the manual:
         - commands and parameters are transmitted as capital letters
         - commands and parameters including successive parameters are separated by at least
           one space (hex 0x20)
         - each individual command (including parameters and data and each response are terminated
-          with Blank CR LF (hex 0x20 hex 0x0d hex 0x0A) and have a maximum length of 80 characters
+          with Blank CR LF (hex 0x0d hex 0x0A) and have a maximum length of 80 characters
         - the decimal separator in a number is a dt (hex 0x2E)
     """
 
-    ...
+    # orbital shaker NAMUR commands
+    READ_DEVICE_NAME = "IN_NAME"
+    READ_ACTUAL_SPEED = "IN_PV_4" 
+    READ_SPEED_SETPOINT = "IN_SP_4" 
+    SET_SPEED = "OUT_SP_4" 
+    START_MOTOR = "START_4" 
+    STOP_MOTOR = "STOP_4"
+    READ_MOTOR_STATUS = "STATUS_4" # not in manual - try this and see if it works
+    READ_SOFTWARE_VERSION = "IN_VERSION"
+    READ_SOFTWARE_ID = "IN_SOFTWARE_ID" # Read software ID and version
+    READ_IAP_ID = "IN_IAP_ID"
+    READ_PCB_ID = "IN_PCB_ID"
+    READ_FLASH_SIZE = "IN_FLASH_SIZE" # Displays controller flash size
+    SET_OPERATING_MODE_A = "SET_MODE_A" # not in manual - try this and see if it works
+    SET_OPERATING_MODE_B = "SET_MODE_B" # not in manual - try this and see if it works
+    SET_OPERATING_MODE_C = "SET_MODE_C" # not in manual - try this and see if it works
+    SET_MODE_1 = "OUT_MODE_1" # not in manual - try this and see if it works
+    SET_MODE_2 = "OUT_MODE_2" # not in manual - try this and see if it works
+    READ_MODE = "IN_MODE" # not in manual - try this and see if it works
 
 
 class Shaker(ShakerProtocol, IKADevice):
     """Driver for IKA orbital shaker."""
 
-    ...
+    def __init__(self, address, **kwargs):
+        """Set up connection parameters, serial or IP address and port."""
+        if address.startswith('/dev') or address.startswith('COM'):  # serial
+            self.hw: Client = SerialClient(address=address, **kwargs)
+        else:
+            self.hw = TcpClient(address=address, **kwargs)
+        self.lock = None  # needs to be initialized later, when the event loop exists
 
+    async def get(self):
+        """Get orbital shaker speed."""
+        speed = await self.query(self.READ_ACTUAL_SPEED)
+        speed_sp = await self.query(self.READ_SPEED_SETPOINT)
+        shaker_status = await self.query(self.READ_SHAKER_STATUS)
+        response = {
+            'speed': {
+                'setpoint': int(speed_sp) if type(speed_sp) is float else speed_sp,
+                'actual': int(speed) if type(speed) is float else speed,
+                'active': shaker_status,
+            }
+        }
+        return response
+
+    async def get_info(self):
+        """Get name and software version of orbital shaker."""
+        name = await self.query(self.READ_DEVICE_NAME)
+        version = await self.query(self.READ_SOFTWARE_VERSION)
+        software_id = await self.query(self.READ_SOFTWARE_ID)
+        response = {
+            'name': name,
+            'version': version,
+            'software ID': software_id,
+        }
+        return response
+
+    async def set(self, setpoint: float):
+        """Set a shaker speed setpoint."""
+        await self.command(self.SET_SPEED + str(setpoint))
+
+    async def control(self, on: bool):
+        """Control the orbital shaker motor."""
+        await self.command(self.START_THE_MOTOR if on else self.STOP_THE_MOTOR)
 
 class VacuumProtocol:
     """Protocol for communicating with a vacuum pump.

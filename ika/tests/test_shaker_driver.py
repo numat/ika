@@ -1,4 +1,4 @@
-"""Test the hotplate driver responds with correct data."""
+"""Test the shaker driver responds with correct data."""
 from random import uniform
 from unittest import mock
 
