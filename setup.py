@@ -26,9 +26,9 @@ setup(
             'pytest-cov>=4,<5',
             'pytest-asyncio==0.*',
             'pytest-xdist==3.*',
-            'flake8==6.*',
-            'flake8-docstrings==1.*',
+            'ruff==0.0.261',
             'mypy==1.0.1',
+            'types-pyserial==3.5.0.5'
         ],
     },
     entry_points={
