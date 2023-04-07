@@ -214,3 +214,42 @@ class Shaker(RealShaker):
 
 class Vacuum(RealVacuum):
     """Mocks the vacuum driver for offline testing."""
+
+    def __init__(self, *args, **kwargs):
+        """Set up connection parameters with default port."""
+        super().__init__(*args, **kwargs)
+        self.hw = AsyncClientMock()
+        self.state: Dict[str, Any] = {
+            'name': 'THIS SUCKS',
+            'active': False,
+            'version': 2.3,
+            'pressure': {
+                'setpoint': 0.0,
+                'actual': 0.0,
+            }
+        }
+
+    async def query(self, command):
+        """Return mock requests to queries."""
+        if command == self.READ_DEVICE_NAME:
+            return self.state['name']
+        elif command == self.READ_SET_PRESSURE:
+            return round(uniform(-20, 0), 2) 
+        elif command == self.READ_ACTUAL_PRESSURE:
+            return round(uniform(-20, 0), 2)
+        elif command == self.READ_VAC_STATUS:
+            return self.state['active']
+        elif command == self.READ_SOFTWARE_VERSION:
+            return self.state['version']
+
+    async def command(self, command):
+        """Update mock state with commands."""
+        await asyncio.sleep(uniform(0.0, 0.1))
+        if command == self.START_MEASUREMENT:
+            self.state['active'] = True
+        elif command == self.STOP_MEASUREMENT:
+            self.state['active'] = False
+        else:
+            command, value = command.split(" ")
+        if command == self.SET_PRESSURE.strip():
+            self.state['pressure']['setpoint'] = float(value)

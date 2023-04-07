@@ -299,6 +299,7 @@ class ShakerProtocol:
 
     # orbital shaker NAMUR commands
     READ_DEVICE_NAME = "IN_NAME"
+    READ_ACTUAL_TEMPERATURE = "IN_PV_2"
     READ_ACTUAL_SPEED = "IN_PV_4" 
     READ_SET_TEMPERATURE = "IN_SP_2"
     READ_SET_SPEED = "IN_SP_4" 
@@ -326,9 +327,6 @@ class ShakerProtocol:
     READ_MOTOR_STATUS = "STATUS_4" # not in manual - try this and see if it works
     READ_SOFTWARE_VERSION = "IN_VERSION"
     READ_SOFTWARE_ID = "IN_SOFTWARE_ID" # Read software ID and version
-    READ_IAP_ID = "IN_IAP_ID"
-    READ_PCB_ID = "IN_PCB_ID"
-    READ_FLASH_SIZE = "IN_FLASH_SIZE" # Displays controller flash size
     SET_OPERATING_MODE_A = "SET_MODE_A" # not in manual - try this and see if it works
     SET_OPERATING_MODE_B = "SET_MODE_B" # not in manual - try this and see if it works
     SET_OPERATING_MODE_C = "SET_MODE_C" # not in manual - try this and see if it works
@@ -415,23 +413,23 @@ class VacuumProtocol:
     """
 
     # vacuum pump NAMUR commands
-    # Return the actual values: 'IN_PARA1'
-    # Set the set values for the pump control: 'OUT_PARA1'
-    # Set the set values for Bluetooth connection: 'OUT_PARA2'
+    READ_PARAMETERS = "IN_PARA1"
+    SET_PARAMATERS_PUMP = "OUT_PARA1"
+    SET_PARAMETERS_BLUETOOTH = "OUT_PARA2"
+    READ_VAC_STATUS = "IN_STATUS"
     # Send the actual device status: 'OUT_STATUS'
-    # Reads the status of a device: 'IN_STATUS'
-    # Read the version of the firmware: 'IN_VERSION'
+    READ_SOFTWARE_VERSION = "IN_VERSION"
     # Read the release date of the display/ logic firmware: 'IN_DATE'
-    READ_DEVICE_NAME = 'IN_NAME'
+    READ_DEVICE_NAME = "IN_NAME"
     # Read the device type.: 'IN_DEVICE'
     # Read mac address of Wico.: 'IN_ADDRESS'
     # Read paired mac address of station.: 'IN_PARING' (sic)
     # Write new paired mac addresses of both station and Wico: 'OUT_ADDRESS'
-    # Reads the set pressure value: 'IN_SP_66'
-    # Sets set point pressure value: 'OUT_SP_66'
-    # Reads the actual pressure value: 'IN_PV_66'
-    # Reads the evacuating mode: 'IN_MODE_66'
-    # Sets the evacuating mode: 'OUT_MODE_66'
+    READ_SET_PRESSURE = "IN_SP_66"
+    SET_PRESSURE = "OUT_SP_66"
+    READ_ACTUAL_PRESSURE = "IN_PV_66"
+    READ_VAC_MODE = "IN_MODE_66"
+    SET_VAC_MODE = "OUT_MODE_66"
     # Reads error state: 'IN_ERROR'
     # Test Error. Sends out error code: 'OUT_ERROR'
     # Reads Bluetooth Device Name: 'IN_BT_NAME'
@@ -441,9 +439,9 @@ class VacuumProtocol:
     # Set PC communication watchdog time 2: 'OUT_WD1@'
     # Set the PC safety pump rate: 'OUT_WD2@'
     # Set the PC safety pressure: 'OUT_SP_41'
-    RESET = 'RESET'
-    # Starts the measurement: 'START_66'
-    # Stops the measurement: 'STOP_66'
+    RESET = "RESET"
+    START_MEASUREMENT = "START_66"
+    STOP_MEASUREMENT = "STOP_66"
     # Starts IAP mode: 'ENTER_IAP'
     # It is used to calibrate vacuum: 'CALIB_66'
     # It is used to read vacuum calibration values: 'IN_CALIB_66'

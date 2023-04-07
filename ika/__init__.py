@@ -42,8 +42,13 @@ def command_line(args=None):
                 if not args.no_info:
                     d['info'] = await device.get_info()
                 print(json.dumps(d, indent=4))
-    elif args.type in ['vacuum']:
-        raise NotImplementedError((f"Not implemented yet for device type: {args.type}"))
+    elif args.type == 'vacuum':    
+        async def get():
+            async with Vacuum(args.address) as device:
+                d = await device.get()
+                if not args.no_info:
+                    d['info'] = await device.get_info()
+                print(json.dumps(d, indent=4))
     else:
         raise ValueError(f"Unsupported device type: {args.type}")
     asyncio.run(get())
