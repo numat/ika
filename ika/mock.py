@@ -1,4 +1,5 @@
 """Contains mocks for driver objects for offline testing."""
+from __future__ import annotations
 
 import asyncio
 from random import uniform
