@@ -300,11 +300,11 @@ class ShakerProtocol:
     # orbital shaker NAMUR commands
     READ_DEVICE_NAME = "IN_NAME"
     READ_ACTUAL_TEMPERATURE = "IN_PV_2"
-    READ_ACTUAL_SPEED = "IN_PV_4" 
+    READ_ACTUAL_SPEED = "IN_PV_4"
     READ_SET_TEMPERATURE = "IN_SP_2"
-    READ_SET_SPEED = "IN_SP_4" 
+    READ_SET_SPEED = "IN_SP_4"
     SET_TEMP = "OUT_SP_2 "
-    SET_SPEED = "OUT_SP_4 " 
+    SET_SPEED = "OUT_SP_4 "
     SET_WD_SAFETY_LIMIT_TEMPERATURE_WITH_SET_VALUE_ECHO = "OUT_SP_12@"
     # requires a value to be appended
     SET_WD_SAFETY_LIMIT_SPEED_WITH_SET_VALUE_ECHO = "OUT_SP_42@"
@@ -321,7 +321,7 @@ class ShakerProtocol:
     RESET = "RESET"
     START_HEATER = "START_2"
     STOP_HEATER = "STOP_2"
-    START_MOTOR = "START_4" 
+    START_MOTOR = "START_4"
     STOP_MOTOR = "STOP_4"
     READ_HEATER_STATUS = "STATUS_2" # not in manual - try this and see if it works
     READ_MOTOR_STATUS = "STATUS_4" # not in manual - try this and see if it works
@@ -383,8 +383,12 @@ class Shaker(ShakerProtocol, IKADevice):
     async def set(self, equipment: str, setpoint: float):
         """Set a temperature or shaker speed setpoint."""
         if equipment == 'heater':
+            if setpoint < 1.0 or setpoint > 100:
+                raise ValueError('Setpoint invalid. Temperature SP must be between 1C and 100C.')
             await self.command(self.SET_TEMP + str(setpoint))
         elif equipment == 'shaker':
+            if setpoint < 300 or setpoint > 3000:
+                raise ValueError('Setpoint invalid. Speed SP must be between 300 and 3000rpm.')
             await self.command(self.SET_SPEED + str(setpoint))
         else:
             raise ValueError(f'Equipment "{equipment} invalid. '

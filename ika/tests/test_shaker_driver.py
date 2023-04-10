@@ -63,8 +63,16 @@ async def test_setpoint_roundtrip():
     """Confirm that the setpoint can be updated."""
     async def get():
         async with Shaker(ADDRESS) as device:
-            speed_sp = round(uniform(100, 1000), 0)
-            temp_sp = round(uniform(30, 150), 2)
+            with pytest.raises(ValueError, match="Setpoint invalid"):
+                await device.set(equipment='shaker', setpoint=299)
+            with pytest.raises(ValueError, match="Setpoint invalid"):
+                await device.set(equipment='shaker', setpoint=3001)
+            with pytest.raises(ValueError, match="Setpoint invalid"):
+                await device.set(equipment='heater', setpoint=0)
+            with pytest.raises(ValueError, match="Setpoint invalid"):
+                await device.set(equipment='heater', setpoint=101)
+            speed_sp = round(uniform(300, 1000), 0)
+            temp_sp = round(uniform(30, 100), 2)
             await device.set(equipment='shaker', setpoint=speed_sp)
             await device.set(equipment='heater', setpoint=temp_sp)
             response = await device.get()

@@ -62,11 +62,11 @@ async def test_start_stop():
         async with Vacuum(ADDRESS) as device:
             response = await device.get()
             assert response['active'] is False
-            
+
             await device.control(on=True)
             response = await device.get()
             assert response['active'] is True
-           
+
             await device.control(on=False)
             response = await device.get()
             assert response['active'] is False

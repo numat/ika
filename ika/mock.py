@@ -2,7 +2,7 @@
 
 import asyncio
 from random import uniform
-from typing import Any, Dict, Union
+from typing import Any
 from unittest.mock import MagicMock
 
 from .driver import Hotplate as RealHotplate
@@ -26,7 +26,7 @@ class OverheadStirrer(RealOverheadStirrer):
         """Set up connection parameters with default port."""
         super().__init__(*args, **kwargs)
         self.hw = AsyncClientMock()
-        self.state: Dict[str, Any] = {
+        self.state: dict[str, Any] = {
             'name': 'STIRR GO WHIRRR',
             'torque_limit': 60.0,
             'speed_limit': 2000.0,
@@ -83,7 +83,7 @@ class Hotplate(RealHotplate):
         """Set up connection parameters with default port."""
         super().__init__(*args, **kwargs)
         self.hw = AsyncClientMock()
-        self.state: Dict[str, Dict[str, Union[bool, float, str]]] = {
+        self.state: dict[str, dict[str, bool | float | str]] = {
             "info": {
                 "name": "SPINNY HOT THING",
                 "device_type": 1,
@@ -157,7 +157,7 @@ class Shaker(RealShaker):
         """Set up connection parameters with default port."""
         super().__init__(*args, **kwargs)
         self.hw = AsyncClientMock()
-        self.state: Dict[str, Any] = {
+        self.state: dict[str, Any] = {
             'name': "SHAKE AND BAKE",
             'temp': {
                 'setpoint': 50,
@@ -219,7 +219,7 @@ class Vacuum(RealVacuum):
         """Set up connection parameters with default port."""
         super().__init__(*args, **kwargs)
         self.hw = AsyncClientMock()
-        self.state: Dict[str, Any] = {
+        self.state: dict[str, Any] = {
             'name': 'THIS SUCKS',
             'active': False,
             'version': 2.3,
@@ -234,7 +234,7 @@ class Vacuum(RealVacuum):
         if command == self.READ_DEVICE_NAME:
             return self.state['name']
         elif command == self.READ_SET_PRESSURE:
-            return round(uniform(-20, 0), 2) 
+            return round(uniform(-20, 0), 2)
         elif command == self.READ_ACTUAL_PRESSURE:
             return round(uniform(-20, 0), 2)
         elif command == self.READ_VAC_STATUS:
