@@ -1,12 +1,7 @@
 """Python driver and command line tool for IKA instruments."""
-from sys import version_info
-
 from setuptools import setup
 
-if version_info < (3, 7):
-    raise ImportError("This module requires Python >=3.7.")
-
-with open('README.md', 'r') as in_file:
+with open('README.md') as in_file:
     long_description = in_file.read()
 
 setup(
