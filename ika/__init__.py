@@ -4,7 +4,7 @@ Python driver for IKA equipment.
 Distributed under the GNU General Public License v3
 Copyright (C) 2022 NuMat Technologies
 """
-from ika.driver import Hotplate, OverheadStirrer, Vacuum, Shaker
+from ika.driver import Hotplate, OverheadStirrer, Shaker, Vacuum
 
 
 def command_line(args=None):
