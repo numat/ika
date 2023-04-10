@@ -4,11 +4,9 @@ ignore = [
     "D104",
     "D107",
     "C901",
-    "PT001",
-    "PT018",
 ]
 exclude = ["venv*"]
-select = ["C", "D", "E", "F", "UP", "YTT", "PT", "W"]
+select = ["C", "D", "E", "F", "UP", "YTT", "W"]
 # "SIM" flake-simplify
 # "ARG" flake8-unused args
 # "B" bandit
