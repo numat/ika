@@ -282,23 +282,127 @@ class Hotplate(HotplateProtocol, IKADevice):
 class ShakerProtocol:
     """Protocol for communicating with an orbital shaker.
 
+    RS-232 Information
+        - Transmission procedure: asynchronous character transmission in start-stop mode
+        - Type of transmission: full duplex
+        - 1 start bit; 7 character bits; 1 parity bit (even); 1 stop bit
+        - Transmission speed: 9600 bit/s
+
     Command syntax and format from the manual:
         - commands and parameters are transmitted as capital letters
         - commands and parameters including successive parameters are separated by at least
           one space (hex 0x20)
         - each individual command (including parameters and data and each response are terminated
-          with Blank CR LF (hex 0x20 hex 0x0d hex 0x0A) and have a maximum length of 80 characters
+          with Blank CR LF (hex 0x0d hex 0x0A) and have a maximum length of 80 characters
         - the decimal separator in a number is a dt (hex 0x2E)
     """
 
-    ...
+    # orbital shaker NAMUR commands
+    READ_DEVICE_NAME = "IN_NAME"
+    READ_ACTUAL_TEMPERATURE = "IN_PV_2"
+    READ_ACTUAL_SPEED = "IN_PV_4"
+    READ_SET_TEMPERATURE = "IN_SP_2"
+    READ_SET_SPEED = "IN_SP_4"
+    SET_TEMP = "OUT_SP_2 "
+    SET_SPEED = "OUT_SP_4 "
+    SET_WD_SAFETY_LIMIT_TEMPERATURE_WITH_SET_VALUE_ECHO = "OUT_SP_12@"
+    # requires a value to be appended
+    SET_WD_SAFETY_LIMIT_SPEED_WITH_SET_VALUE_ECHO = "OUT_SP_42@"
+    # requires a value to be appended
+    WATCHDOG_MODE_1 = "OUT_WD1@"  # requires a watchdog time (20-1500 s) to be appended to the end
+    # This command launches the watchdog function and must be transmitted within the set time.
+    # In watchdog mode 1, if event WD1 occurs, the heating and stirring functions are switched off
+    #  and ER 2 is displayed
+    WATCHDOG_MODE_2 = "OUT_WD2@"  # requires a watchdog time (20-1500 s) to be appended to the end
+    # This command launches the watchdog function and must be transmitted within the set time.
+    # In watchdog mode 2, if event WD2 occurs, the speed and temperature setpoint are set to their
+    # watchdog setpoints.
+    # the WD2 event can be reset with the command "OUT_WD2@0", which also stops the watchdog
+    RESET = "RESET"
+    START_HEATER = "START_2"
+    STOP_HEATER = "STOP_2"
+    START_MOTOR = "START_4"
+    STOP_MOTOR = "STOP_4"
+    READ_HEATER_STATUS = "STATUS_2" # not in manual - try this and see if it works
+    READ_MOTOR_STATUS = "STATUS_4" # not in manual - try this and see if it works
+    READ_SOFTWARE_VERSION = "IN_VERSION"
+    READ_SOFTWARE_ID = "IN_SOFTWARE_ID" # Read software ID and version
+    SET_OPERATING_MODE_A = "SET_MODE_A" # not in manual - try this and see if it works
+    SET_OPERATING_MODE_B = "SET_MODE_B" # not in manual - try this and see if it works
+    SET_OPERATING_MODE_C = "SET_MODE_C" # not in manual - try this and see if it works
+    SET_MODE_1 = "OUT_MODE_1" # not in manual - try this and see if it works
+    SET_MODE_2 = "OUT_MODE_2" # not in manual - try this and see if it works
+    READ_MODE = "IN_MODE" # not in manual - try this and see if it works
 
 
 class Shaker(ShakerProtocol, IKADevice):
     """Driver for IKA orbital shaker."""
 
-    ...
+    def __init__(self, address, **kwargs):
+        """Set up connection parameters, serial or IP address and port."""
+        if address.startswith('/dev') or address.startswith('COM'):  # serial
+            self.hw: Client = SerialClient(address=address, **kwargs)
+        else:
+            self.hw = TcpClient(address=address, **kwargs)
+        self.lock = None  # needs to be initialized later, when the event loop exists
 
+    async def get(self):
+        """Get orbital shaker speed."""
+        temp = await self.query(self.READ_ACTUAL_TEMPERATURE)
+        temp_sp = await self.query(self.READ_SET_TEMPERATURE)
+        heater_status = await self.query(self.READ_HEATER_STATUS)
+        speed = await self.query(self.READ_ACTUAL_SPEED)
+        speed_sp = await self.query(self.READ_SET_SPEED)
+        shaker_status = await self.query(self.READ_MOTOR_STATUS)
+        response = {
+            'temp': {
+                'setpoint': temp_sp,
+                'actual': temp,
+                'active': heater_status,
+            },
+            'speed': {
+                'setpoint': int(speed_sp) if type(speed_sp) is float else speed_sp,
+                'actual': int(speed) if type(speed) is float else speed,
+                'active': shaker_status,
+            }
+        }
+        return response
+
+    async def get_info(self):
+        """Get name and software version of orbital shaker."""
+        name = await self.query(self.READ_DEVICE_NAME)
+        version = await self.query(self.READ_SOFTWARE_VERSION)
+        software_id = await self.query(self.READ_SOFTWARE_ID)
+        response = {
+            'name': name,
+            'version': version,
+            'software_ID': software_id,
+        }
+        return response
+
+    async def set(self, equipment: str, setpoint: float):
+        """Set a temperature or shaker speed setpoint."""
+        if equipment == 'heater':
+            if setpoint < 1.0 or setpoint > 100:
+                raise ValueError('Setpoint invalid. Temperature SP must be between 1C and 100C.')
+            await self.command(self.SET_TEMP + str(setpoint))
+        elif equipment == 'shaker':
+            if setpoint < 300 or setpoint > 3000:
+                raise ValueError('Setpoint invalid. Speed SP must be between 300 and 3000rpm.')
+            await self.command(self.SET_SPEED + str(setpoint))
+        else:
+            raise ValueError(f'Equipment "{equipment} invalid. '
+                             'Must be either "heater" or "shaker"')
+
+    async def control(self, equipment: str, on: bool):
+        """Control the heater controlling process temperature, or shaker motor."""
+        if equipment == 'heater':
+            await self.command(self.START_HEATER if on else self.STOP_HEATER)
+        elif equipment == 'shaker':
+            await self.command(self.START_MOTOR if on else self.STOP_MOTOR)
+        else:
+            raise ValueError(f'Equipment "{equipment} invalid. '
+                             'Must be either "heater" or "shaker"')
 
 class VacuumProtocol:
     """Protocol for communicating with a vacuum pump.
@@ -313,23 +417,23 @@ class VacuumProtocol:
     """
 
     # vacuum pump NAMUR commands
-    # Return the actual values: 'IN_PARA1'
-    # Set the set values for the pump control: 'OUT_PARA1'
-    # Set the set values for Bluetooth connection: 'OUT_PARA2'
+    READ_PARAMETERS = "IN_PARA1"
+    SET_PARAMATERS_PUMP = "OUT_PARA1"
+    SET_PARAMETERS_BLUETOOTH = "OUT_PARA2"
+    READ_VAC_STATUS = "IN_STATUS"
     # Send the actual device status: 'OUT_STATUS'
-    # Reads the status of a device: 'IN_STATUS'
-    # Read the version of the firmware: 'IN_VERSION'
+    READ_SOFTWARE_VERSION = "IN_VERSION"
     # Read the release date of the display/ logic firmware: 'IN_DATE'
-    READ_DEVICE_NAME = 'IN_NAME'
+    READ_DEVICE_NAME = "IN_NAME"
     # Read the device type.: 'IN_DEVICE'
     # Read mac address of Wico.: 'IN_ADDRESS'
     # Read paired mac address of station.: 'IN_PARING' (sic)
     # Write new paired mac addresses of both station and Wico: 'OUT_ADDRESS'
-    # Reads the set pressure value: 'IN_SP_66'
-    # Sets set point pressure value: 'OUT_SP_66'
-    # Reads the actual pressure value: 'IN_PV_66'
-    # Reads the evacuating mode: 'IN_MODE_66'
-    # Sets the evacuating mode: 'OUT_MODE_66'
+    READ_SET_PRESSURE = "IN_SP_66"
+    SET_PRESSURE = "OUT_SP_66"
+    READ_ACTUAL_PRESSURE = "IN_PV_66"
+    READ_VAC_MODE = "IN_MODE_66"
+    SET_VAC_MODE = "OUT_MODE_66"
     # Reads error state: 'IN_ERROR'
     # Test Error. Sends out error code: 'OUT_ERROR'
     # Reads Bluetooth Device Name: 'IN_BT_NAME'
@@ -339,9 +443,9 @@ class VacuumProtocol:
     # Set PC communication watchdog time 2: 'OUT_WD1@'
     # Set the PC safety pump rate: 'OUT_WD2@'
     # Set the PC safety pressure: 'OUT_SP_41'
-    RESET = 'RESET'
-    # Starts the measurement: 'START_66'
-    # Stops the measurement: 'STOP_66'
+    RESET = "RESET"
+    START_MEASUREMENT = "START_66"
+    STOP_MEASUREMENT = "STOP_66"
     # Starts IAP mode: 'ENTER_IAP'
     # It is used to calibrate vacuum: 'CALIB_66'
     # It is used to read vacuum calibration values: 'IN_CALIB_66'
@@ -359,4 +463,42 @@ class VacuumProtocol:
 class Vacuum(VacuumProtocol, IKADevice):
     """Driver for IKA vacuum pump."""
 
-    ...
+    def __init__(self, address, **kwargs):
+        """Set up connection parameters, serial or IP address and port."""
+        if address.startswith('/dev') or address.startswith('COM'):  # serial
+            self.hw: Client = SerialClient(address=address, **kwargs)
+        else:
+            self.hw = TcpClient(address=address, **kwargs)
+        self.lock = None  # needs to be initialized later, when the event loop exists
+
+    async def get(self):
+        """Get vacuum pressure."""
+        pressure = await self.query(self.READ_ACTUAL_PRESSURE)
+        pressure_sp = await self.query(self.READ_SET_PRESSURE)
+        vac_status = await self.query(self.READ_VAC_STATUS)
+        response = {
+            'active': vac_status,
+            'pressure': {
+                'setpoint': pressure_sp,
+                'actual': pressure,
+            }
+        }
+        return response
+
+    async def get_info(self):
+        """Get name and software version of vacuum."""
+        name = await self.query(self.READ_DEVICE_NAME)
+        version = await self.query(self.READ_SOFTWARE_VERSION)
+        response = {
+            'name': name,
+            'version': version,
+        }
+        return response
+
+    async def set(self, setpoint: float):
+        """Set a vacuum pressure setpoint."""
+        await self.command(self.SET_PRESSURE + str(setpoint))
+
+    async def control(self, on: bool):
+        """Control the vacuum measurement."""
+        await self.command(self.START_MEASUREMENT if on else self.STOP_MEASUREMENT)

@@ -19,8 +19,8 @@ def driver():
 def expected_response():
     """Return mocked vacuum data."""
     return {
-        "name": "THIS SUCKS",
-        "pressure": 0.01,
+        'name': "THIS SUCKS",
+        'version': 2.3,
     }
 
 
@@ -29,8 +29,8 @@ def test_driver_cli_with_info(capsys):
     """Confirm the commandline interface works."""
     command_line([ADDRESS, '--type', 'vacuum'])
     captured = capsys.readouterr()
-    assert "pressure" in captured.out
-    assert "name" in captured.out
+    assert 'pressure' in captured.out
+    assert 'name' in captured.out
 
 
 @mock.patch('ika.Vacuum', Vacuum)
@@ -38,8 +38,8 @@ def test_driver_cli(capsys):
     """Confirm the commandline interface works with --no-info."""
     command_line([ADDRESS, '--type', 'vacuum', '--no-info'])
     captured = capsys.readouterr()
-    assert "pressure" in captured.out
-    assert "name" not in captured.out
+    assert 'pressure' in captured.out
+    assert 'name' not in captured.out
 
 
 async def test_get_response(driver, expected_response):
@@ -60,9 +60,14 @@ async def test_start_stop():
     """Confirm that the vacuum motor can be controlled."""
     async def get():
         async with Vacuum(ADDRESS) as device:
-            assert await device.get_running() is False
+            response = await device.get()
+            assert response['active'] is False
+
             await device.control(on=True)
-            assert await device.get_running() is True
+            response = await device.get()
+            assert response['active'] is True
+
             await device.control(on=False)
-            assert await device.get_running() is False
+            response = await device.get()
+            assert response['active'] is False
     await get()
