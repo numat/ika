@@ -293,7 +293,7 @@ class ShakerProtocol:
         - commands and parameters including successive parameters are separated by at least
           one space (hex 0x20)
         - each individual command (including parameters and data and each response are terminated
-          with Blank CR LF (hex 0x0d hex 0x0A) and have a maximum length of 80 characters
+          with CR LF (hex 0x0d hex 0x0A) and have a maximum length of 80 characters
         - the decimal separator in a number is a dt (hex 0x2E)
     """
 
@@ -318,21 +318,17 @@ class ShakerProtocol:
     # In watchdog mode 2, if event WD2 occurs, the speed and temperature setpoint are set to their
     # watchdog setpoints.
     # the WD2 event can be reset with the command "OUT_WD2@0", which also stops the watchdog
-    RESET = "RESET"
     START_HEATER = "START_2"
     STOP_HEATER = "STOP_2"
     START_MOTOR = "START_4"
     STOP_MOTOR = "STOP_4"
-    READ_HEATER_STATUS = "STATUS_2" # not in manual - try this and see if it works
-    READ_MOTOR_STATUS = "STATUS_4" # not in manual - try this and see if it works
+    READ_HEATER_STATUS = "STATUS_2" # Does not exist - find this
+    READ_MOTOR_STATUS = "STATUS 4" # Does not exist - find this
     READ_SOFTWARE_VERSION = "IN_VERSION"
     READ_SOFTWARE_ID = "IN_SOFTWARE_ID" # Read software ID and version
-    SET_OPERATING_MODE_A = "SET_MODE_A" # not in manual - try this and see if it works
-    SET_OPERATING_MODE_B = "SET_MODE_B" # not in manual - try this and see if it works
-    SET_OPERATING_MODE_C = "SET_MODE_C" # not in manual - try this and see if it works
-    SET_MODE_1 = "OUT_MODE_1" # not in manual - try this and see if it works
-    SET_MODE_2 = "OUT_MODE_2" # not in manual - try this and see if it works
-    READ_MODE = "IN_MODE" # not in manual - try this and see if it works
+    SET_ROTATION_CCW = "OUT_MODE_1" # Sets rotation to CCW (OUT_MODE_2 does not set to CW)
+    # Will not work if the last command sent to the shaker was RESET for some reason??
+    RESET = "RESET" # This will set rotation back to CW after being set to CCW
 
 
 class Shaker(ShakerProtocol, IKADevice):
