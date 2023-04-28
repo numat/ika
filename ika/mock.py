@@ -234,7 +234,7 @@ class Vacuum(RealVacuum):
         """Return mock requests to queries."""
         if command == self.READ_DEVICE_NAME:
             return self.state['name']
-        elif command == self.READ_SET_PRESSURE:
+        elif command == self.READ_SET_PRESSURE:  # noqa: SIM114
             return round(uniform(-20, 0), 2)
         elif command == self.READ_ACTUAL_PRESSURE:
             return round(uniform(-20, 0), 2)
