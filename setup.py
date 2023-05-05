@@ -21,7 +21,7 @@ setup(
             'pytest-cov>=4,<5',
             'pytest-asyncio==0.*',
             'pytest-xdist==3.*',
-            'ruff==0.0.264',
+            'ruff==0.0.265',
             'mypy==1.2.0',
             'types-pyserial==3.5.0.8'
         ],
