@@ -195,10 +195,7 @@ class Hotplate(HotplateProtocol, IKADevice):
 
     def __init__(self, address, include_surface_control=False):
         """Set up connection parameters, IP address and port."""
-        if address.startswith('/dev') or address.startswith('COM'):  # serial
-            self.hw: Client = SerialClient(address=address)
-        else:
-            self.hw = TcpClient(address=address)
+        super().__init__(address)
         self.include_surface_control = include_surface_control
 
     async def get(self, include_surface_control=False):
