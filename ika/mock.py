@@ -107,6 +107,9 @@ class Hotplate(RealHotplate):
                 "setpoint": 300,
                 "active": False,
             },
+            "fluid_temp": {
+                "actual": 100,
+            }
         }
 
     async def query(self, command):
@@ -127,6 +130,8 @@ class Hotplate(RealHotplate):
                 return round(uniform(15, 100), 2)
             elif command == self.READ_ACTUAL_SURFACE_TEMP:
                 return round(uniform(80, 120), 2)
+            elif command == self.READ_ACTUAL_FLUID_TEMP:
+                return round(uniform(20, 110), 2)
             elif command == self.READ_SURFACE_TEMP_SETPOINT:
                 return self.state["surface_temp"]["setpoint"]
             elif command == self.READ_PROCESS_TEMP_SETPOINT:
