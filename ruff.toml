@@ -4,6 +4,7 @@ ignore = [
     "D104",
     "D107",
     "C901",
+    "RUF012",  # typing.ClassVar
 ]
 exclude = ["venv*"]
 select = [
