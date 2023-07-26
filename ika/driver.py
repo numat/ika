@@ -152,6 +152,7 @@ class HotplateProtocol:
     READ_ACTUAL_PROCESS_TEMP = "IN_PV_1"
     READ_ACTUAL_SURFACE_TEMP = "IN_PV_2"
     READ_ACTUAL_SPEED = "IN_PV_4"
+    READ_ACTUAL_FLUID_TEMP = "IN_PV_7"  # for double temp probe "PT1000"
     READ_VISCOSITY_TREND_VALUE = "IN_PV_5"
     READ_PROCESS_TEMP_SETPOINT = "IN_SP_1"
     READ_SURFACE_TEMP_SETPOINT = "IN_SP_2"
@@ -204,6 +205,7 @@ class Hotplate(HotplateProtocol, IKADevice):
         speed_sp = await self.query(self.READ_SPEED_SETPOINT)
         process_temp = await self.query(self.READ_ACTUAL_PROCESS_TEMP)
         process_temp_sp = await self.query(self.READ_PROCESS_TEMP_SETPOINT)
+        fluid_temp = await self.query(self.READ_ACTUAL_FLUID_TEMP)
         shaker_status = await self.query(self.READ_SHAKER_STATUS)
         process_heater_status = await self.query(self.READ_PROCESS_HEATER_STATUS)
         surface_data = {
@@ -226,6 +228,9 @@ class Hotplate(HotplateProtocol, IKADevice):
                 'active': process_heater_status,
             },
             'surface_temp': surface_data,
+            'fluid_temp': {
+                'actual': fluid_temp,
+            }
         }
         return response
 
