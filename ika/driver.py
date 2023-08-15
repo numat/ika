@@ -218,8 +218,8 @@ class Hotplate(HotplateProtocol, IKADevice):
         # FIXME handle case where process temp probe is unplugged
         response = {
             'speed': {
-                'setpoint': int(speed_sp) if type(speed_sp) is float else speed_sp,
-                'actual': int(speed) if type(speed) is float else speed,
+                'setpoint': int(speed_sp) if isinstance(speed_sp, float) else speed_sp,
+                'actual': int(speed) if isinstance(speed, float) else speed,
                 'active': shaker_status,
             },
             'process_temp': {
@@ -363,8 +363,8 @@ class Shaker(ShakerProtocol, IKADevice):
                 'active': heater_status,
             },
             'speed': {
-                'setpoint': int(speed_sp) if type(speed_sp) is float else speed_sp,
-                'actual': int(speed) if type(speed) is float else speed,
+                'setpoint': int(speed_sp) if isinstance(speed_sp, float) else speed_sp,
+                'actual': int(speed) if isinstance(speed, float) else speed,
                 'active': shaker_status,
             }
         }
