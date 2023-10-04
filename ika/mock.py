@@ -10,6 +10,7 @@ from .driver import Hotplate as RealHotplate
 from .driver import OverheadStirrer as RealOverheadStirrer
 from .driver import Shaker as RealShaker
 from .driver import Vacuum as RealVacuum
+from .driver import VacuumProtocol
 
 
 class AsyncClientMock(MagicMock):
@@ -244,6 +245,7 @@ class Vacuum(RealVacuum):
         self.state: dict[str, Any] = {
             'name': 'THIS SUCKS',
             'active': False,
+            'mode': VacuumProtocol.Mode.AUTOMATIC.name,
             'version': 2.3,
             'pressure': {
                 'setpoint': 0.0,
@@ -266,6 +268,8 @@ class Vacuum(RealVacuum):
                 return self.state['active']
             elif command == self.READ_SOFTWARE_VERSION:
                 return self.state['version']
+            elif command == self.READ_VAC_MODE:
+                return VacuumProtocol.Mode[self.state['mode']].value
 
     async def command(self, command):
         """Update mock state with commands."""
@@ -282,3 +286,5 @@ class Vacuum(RealVacuum):
                 self.state['pressure']['setpoint'] = float(value)
             elif command == self.SET_DEVICE_NAME.strip():
                 self.state['name'] = value
+            elif command == self.SET_VAC_MODE.strip():
+                self.state['mode'] = VacuumProtocol.Mode(value).name

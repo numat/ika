@@ -464,10 +464,10 @@ class VacuumProtocol:
     class Mode(Enum):
         """Possible operating modes."""
 
-        AUTOMATIC = None  # Automatic boiling point recognition
-        MANUAL = None  # Pressure control
-        PERCENT = None  # % pump speed
-        PROGRAM = None  # User-defined program
+        AUTOMATIC = '0'  # Automatic boiling point recognition
+        MANUAL = '1'  # Pressure control
+        PERCENT = '2'  # % pump speed
+        PROGRAM = '3'  # User-defined program
 
 
 class Vacuum(VacuumProtocol, IKADevice):
@@ -485,9 +485,11 @@ class Vacuum(VacuumProtocol, IKADevice):
         """Get vacuum pressure."""
         pressure = await self.query(self.READ_ACTUAL_PRESSURE)
         pressure_sp = await self.query(self.READ_SET_PRESSURE)
+        vac_mode = await self.query(self.READ_VAC_MODE)
         vac_status = await self.query(self.READ_VAC_STATUS)
         response = {
             'active': vac_status,
+            'mode': VacuumProtocol.Mode(vac_mode).name,
             'pressure': {
                 'setpoint': pressure_sp,
                 'actual': pressure,
@@ -508,6 +510,10 @@ class Vacuum(VacuumProtocol, IKADevice):
     async def set(self, setpoint: float):
         """Set a vacuum pressure setpoint."""
         await self.command(self.SET_PRESSURE + str(setpoint))
+
+    async def set_mode(self, mode: VacuumProtocol.Mode):
+        """Set the operating mode."""
+        await self.command(self.SET_VAC_MODE + str(mode.value))
 
     async def set_name(self, name: str):
         """Set a custom device name."""

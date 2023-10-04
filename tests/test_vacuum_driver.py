@@ -94,7 +94,7 @@ async def test_mode_roundtrip(mode):
         async with Vacuum(ADDRESS) as device:
             await device.set_mode(mode)
             response = await device.get()
-            assert mode == response['mode']
+            assert mode.name == response['mode']
     await get()
 
 
