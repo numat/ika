@@ -324,13 +324,13 @@ class ShakerProtocol:
     STOP_HEATER = "STOP_2"
     START_MOTOR = "START_4"
     STOP_MOTOR = "STOP_4"
-    READ_HEATER_STATUS = "STATUS_2" # Does not exist - find this
-    READ_MOTOR_STATUS = "STATUS 4" # Does not exist - find this
+    READ_HEATER_STATUS = "STATUS_2"  # Does not exist - find this
+    READ_MOTOR_STATUS = "STATUS 4"  # Does not exist - find this
     READ_SOFTWARE_VERSION = "IN_VERSION"
-    READ_SOFTWARE_ID = "IN_SOFTWARE_ID" # Read software ID and version
-    SET_ROTATION_CCW = "OUT_MODE_1" # Sets rotation to CCW (OUT_MODE_2 does not set to CW)
+    READ_SOFTWARE_ID = "IN_SOFTWARE_ID"  # Read software ID and version
+    SET_ROTATION_CCW = "OUT_MODE_1"  # Sets rotation to CCW (OUT_MODE_2 does not set to CW)
     # Will not work if the last command sent to the shaker was RESET for some reason??
-    RESET = "RESET" # This will set rotation back to CW after being set to CCW
+    RESET = "RESET"  # This will set rotation back to CW after being set to CCW
 
 
 class Shaker(ShakerProtocol, IKADevice):
