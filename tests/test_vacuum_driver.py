@@ -1,4 +1,5 @@
 """Test the vacuum driver responds with correct data."""
+from random import uniform
 from unittest import mock
 
 import pytest
@@ -70,4 +71,15 @@ async def test_start_stop():
             await device.control(on=False)
             response = await device.get()
             assert response['active'] is False
+    await get()
+
+
+async def test_setpoint_roundtrip():
+    """Confirm that the pressure setpoint can be updated."""
+    async def get():
+        async with Vacuum(ADDRESS) as device:
+            pressure_sp = round(uniform(0, 760), 2)
+            await device.set(setpoint=pressure_sp)
+            response = await device.get()
+            assert pressure_sp == response['pressure']['setpoint']
     await get()
