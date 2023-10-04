@@ -416,8 +416,8 @@ class VacuumProtocol:
 
     # vacuum pump NAMUR commands
     READ_PARAMETERS = "IN_PARA1"
-    SET_PARAMATERS_PUMP = "OUT_PARA1"
-    SET_PARAMETERS_BLUETOOTH = "OUT_PARA2"
+    SET_PARAMATERS_PUMP = "OUT_PARA1 "  # requires a value to be appended
+    SET_PARAMETERS_BLUETOOTH = "OUT_PARA2 "  # requires a value to be appended
     READ_VAC_STATUS = "IN_STATUS"
     # Send the actual device status: 'OUT_STATUS'
     READ_SOFTWARE_VERSION = "IN_VERSION"
@@ -428,10 +428,10 @@ class VacuumProtocol:
     # Read paired mac address of station.: 'IN_PARING' (sic)
     # Write new paired mac addresses of both station and Wico: 'OUT_ADDRESS'
     READ_SET_PRESSURE = "IN_SP_66"
-    SET_PRESSURE = "OUT_SP_66"
+    SET_PRESSURE = "OUT_SP_66 "  # requires a value to be appended
     READ_ACTUAL_PRESSURE = "IN_PV_66"
     READ_VAC_MODE = "IN_MODE_66"
-    SET_VAC_MODE = "OUT_MODE_66"
+    SET_VAC_MODE = "OUT_MODE_66 "  # requires a value to be appended
     # Reads error state: 'IN_ERROR'
     # Test Error. Sends out error code: 'OUT_ERROR'
     # Reads Bluetooth Device Name: 'IN_BT_NAME'

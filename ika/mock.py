@@ -258,10 +258,10 @@ class Vacuum(RealVacuum):
         async with self.lock:  # lock releases on CancelledError
             if command == self.READ_DEVICE_NAME:
                 return self.state['name']
-            elif command == self.READ_SET_PRESSURE:  # noqa: SIM114
-                return round(uniform(-20, 0), 2)
+            elif command == self.READ_SET_PRESSURE:
+                return self.state['pressure']['setpoint']
             elif command == self.READ_ACTUAL_PRESSURE:
-                return round(uniform(-20, 0), 2)
+                return self.state['pressure']['actual']
             elif command == self.READ_VAC_STATUS:
                 return self.state['active']
             elif command == self.READ_SOFTWARE_VERSION:
