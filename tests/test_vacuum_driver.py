@@ -5,6 +5,7 @@ from unittest import mock
 import pytest
 
 from ika import command_line
+from ika.driver import VacuumProtocol
 from ika.mock import Vacuum
 
 ADDRESS = 'fakeip:123'
@@ -82,4 +83,16 @@ async def test_setpoint_roundtrip():
             await device.set(setpoint=pressure_sp)
             response = await device.get()
             assert pressure_sp == response['pressure']['setpoint']
+    await get()
+
+
+@pytest.mark.parametrize('mode', [VacuumProtocol.Mode.AUTOMATIC, VacuumProtocol.Mode.MANUAL,
+                                  VacuumProtocol.Mode.PERCENT, VacuumProtocol.Mode.PROGRAM])
+async def test_mode_roundtrip(mode):
+    """Confirm that the various vacuum modes can be updated."""
+    async def get():
+        async with Vacuum(ADDRESS) as device:
+            await device.set_mode(mode)
+            response = await device.get()
+            assert mode == response['mode']
     await get()

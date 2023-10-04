@@ -3,6 +3,7 @@
 import asyncio
 import logging
 from abc import ABC
+from enum import Enum
 
 from ika.util import Client, SerialClient, TcpClient
 
@@ -456,6 +457,14 @@ class VacuumProtocol:
         8: "The speed sensor has faulted.  Contact service.",
         9: "The internal flash has a read or write error.  Contact service."
     }
+
+    class Mode(Enum):
+        """Possible operating modes."""
+
+        AUTOMATIC = None  # Automatic boiling point recognition
+        MANUAL = None  # Pressure control
+        PERCENT = None  # % pump speed
+        PROGRAM = None  # User-defined program
 
 
 class Vacuum(VacuumProtocol, IKADevice):
