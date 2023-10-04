@@ -277,6 +277,8 @@ class Vacuum(RealVacuum):
             elif command == self.STOP_MEASUREMENT:
                 self.state['active'] = False
             else:
-                command, value = command.split(" ")
+                command, value = command.split(" ", 1)
             if command == self.SET_PRESSURE.strip():
                 self.state['pressure']['setpoint'] = float(value)
+            elif command == self.SET_DEVICE_NAME.strip():
+                self.state['name'] = value

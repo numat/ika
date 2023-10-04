@@ -424,6 +424,9 @@ class VacuumProtocol:
     READ_SOFTWARE_VERSION = "IN_VERSION"
     # Read the release date of the display/ logic firmware: 'IN_DATE'
     READ_DEVICE_NAME = "IN_NAME"
+    # Read custom device name: "IN_CUSTOM_DEVICE_NAME"
+    # unsure of difference between IN_NAME and IN_CUSTOM_DEVICE_NAME
+    SET_DEVICE_NAME = "OUT_CUSTOM_DEVICE_NAME "
     # Read the device type.: 'IN_DEVICE'
     # Read mac address of Wico.: 'IN_ADDRESS'
     # Read paired mac address of station.: 'IN_PARING' (sic)
@@ -505,6 +508,10 @@ class Vacuum(VacuumProtocol, IKADevice):
     async def set(self, setpoint: float):
         """Set a vacuum pressure setpoint."""
         await self.command(self.SET_PRESSURE + str(setpoint))
+
+    async def set_name(self, name: str):
+        """Set a custom device name."""
+        await self.command(self.SET_DEVICE_NAME + name)
 
     async def control(self, on: bool):
         """Control the vacuum measurement."""
