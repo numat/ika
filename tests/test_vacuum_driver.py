@@ -86,8 +86,7 @@ async def test_setpoint_roundtrip():
     await get()
 
 
-@pytest.mark.parametrize('mode', [VacuumProtocol.Mode.AUTOMATIC, VacuumProtocol.Mode.MANUAL,
-                                  VacuumProtocol.Mode.PERCENT, VacuumProtocol.Mode.PROGRAM])
+@pytest.mark.parametrize('mode', list(VacuumProtocol.Mode))
 async def test_mode_roundtrip(mode):
     """Confirm that the various vacuum modes can be updated."""
     async def get():
