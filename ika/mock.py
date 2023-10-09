@@ -10,6 +10,7 @@ from .driver import Hotplate as RealHotplate
 from .driver import OverheadStirrer as RealOverheadStirrer
 from .driver import Shaker as RealShaker
 from .driver import Vacuum as RealVacuum
+from .driver import VacuumProtocol
 
 
 class AsyncClientMock(MagicMock):
@@ -244,39 +245,42 @@ class Vacuum(RealVacuum):
         self.state: dict[str, Any] = {
             'name': 'THIS SUCKS',
             'active': False,
-            'version': 2.3,
+            'mode': VacuumProtocol.Mode.AUTOMATIC.name,
+            'version': '1.3.001',
             'pressure': {
                 'setpoint': 0.0,
                 'actual': 0.0,
             }
         }
 
-    async def query(self, command):
+    async def query(self, command) -> str:
         """Return mock requests to queries."""
         if not self.lock:
             self.lock = asyncio.Lock()
         async with self.lock:  # lock releases on CancelledError
             if command == self.READ_DEVICE_NAME:
                 return self.state['name']
-            elif command == self.READ_SET_PRESSURE:  # noqa: SIM114
-                return round(uniform(-20, 0), 2)
+            elif command == self.READ_SET_PRESSURE:
+                return str(self.state['pressure']['setpoint'])
             elif command == self.READ_ACTUAL_PRESSURE:
-                return round(uniform(-20, 0), 2)
+                return str(self.state['pressure']['actual'])
             elif command == self.READ_VAC_STATUS:
-                return self.state['active']
+                return '75' if not self.state['active'] else '12345'
             elif command == self.READ_SOFTWARE_VERSION:
                 return self.state['version']
-
-    async def command(self, command):
-        """Update mock state with commands."""
-        if not self.lock:
-            self.lock = asyncio.Lock()
-        async with self.lock:  # lock releases on CancelledError
-            if command == self.START_MEASUREMENT:
+            elif command == self.READ_VAC_MODE:
+                return VacuumProtocol.Mode[self.state['mode']].value
+            elif command == self.START_MEASUREMENT:
                 self.state['active'] = True
             elif command == self.STOP_MEASUREMENT:
                 self.state['active'] = False
             else:
-                command, value = command.split(" ")
+                command, value = command.split(" ", 1)
             if command == self.SET_PRESSURE.strip():
                 self.state['pressure']['setpoint'] = float(value)
+            elif command == self.SET_DEVICE_NAME.strip():
+                self.state['name'] = value
+                return ""
+            elif command == self.SET_VAC_MODE.strip():
+                self.state['mode'] = VacuumProtocol.Mode(value).name
+            return command

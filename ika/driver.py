@@ -3,6 +3,8 @@
 import asyncio
 import logging
 from abc import ABC
+from enum import Enum
+from typing import Any, Dict
 
 from ika.util import Client, SerialClient, TcpClient
 
@@ -416,22 +418,23 @@ class VacuumProtocol:
 
     # vacuum pump NAMUR commands
     READ_PARAMETERS = "IN_PARA1"
-    SET_PARAMATERS_PUMP = "OUT_PARA1"
-    SET_PARAMETERS_BLUETOOTH = "OUT_PARA2"
+    SET_PARAMATERS_PUMP = "OUT_PARA1 "  # requires a value to be appended
+    SET_PARAMETERS_BLUETOOTH = "OUT_PARA2 "  # requires a value to be appended
     READ_VAC_STATUS = "IN_STATUS"
     # Send the actual device status: 'OUT_STATUS'
     READ_SOFTWARE_VERSION = "IN_VERSION"
     # Read the release date of the display/ logic firmware: 'IN_DATE'
     READ_DEVICE_NAME = "IN_NAME"
+    SET_DEVICE_NAME = "OUT_NAME "  # manual incorrectly refers to CUSTOM_DEVICE_NAME
     # Read the device type.: 'IN_DEVICE'
     # Read mac address of Wico.: 'IN_ADDRESS'
     # Read paired mac address of station.: 'IN_PARING' (sic)
     # Write new paired mac addresses of both station and Wico: 'OUT_ADDRESS'
     READ_SET_PRESSURE = "IN_SP_66"
-    SET_PRESSURE = "OUT_SP_66"
+    SET_PRESSURE = "OUT_SP_66 "  # requires a value to be appended
     READ_ACTUAL_PRESSURE = "IN_PV_66"
     READ_VAC_MODE = "IN_MODE_66"
-    SET_VAC_MODE = "OUT_MODE_66"
+    SET_VAC_MODE = "OUT_MODE_66 "  # requires a value to be appended
     # Reads error state: 'IN_ERROR'
     # Test Error. Sends out error code: 'OUT_ERROR'
     # Reads Bluetooth Device Name: 'IN_BT_NAME'
@@ -457,6 +460,14 @@ class VacuumProtocol:
         9: "The internal flash has a read or write error.  Contact service."
     }
 
+    class Mode(Enum):
+        """Possible operating modes."""
+
+        AUTOMATIC = '0'  # Automatic boiling point recognition
+        MANUAL = '1'  # Pressure control
+        PERCENT = '2'  # % pump speed
+        PROGRAM = '3'  # User-defined program
+
 
 class Vacuum(VacuumProtocol, IKADevice):
     """Driver for IKA vacuum pump."""
@@ -469,13 +480,41 @@ class Vacuum(VacuumProtocol, IKADevice):
             self.hw = TcpClient(address=address, **kwargs)
         self.lock = None  # needs to be initialized later, when the event loop exists
 
-    async def get(self):
-        """Get vacuum pressure."""
-        pressure = await self.query(self.READ_ACTUAL_PRESSURE)
-        pressure_sp = await self.query(self.READ_SET_PRESSURE)
-        vac_status = await self.query(self.READ_VAC_STATUS)
+    async def get_pressure(self) -> float:
+        """Get vacuum pressure, converting to mmHg."""
+        raw_pressure = await self.query(self.READ_ACTUAL_PRESSURE)
+        return round(float(raw_pressure) / 1.333, 2)
+
+    async def get_pressure_setpoint(self) -> float:
+        """Get vacuum pressure setpoint, converting to mmHg."""
+        raw_sp = await self.query(self.READ_SET_PRESSURE)
+        return round(float(raw_sp) / 1.333, 2)
+
+    async def get_status(self) -> bool:
+        """Get vacuum status and convert to running/not running bool.
+
+        TODO: Figure out the actual status bit (bit 25?)
+        """
+        raw_status = await self.query(self.READ_VAC_STATUS)
+        return not (raw_status == '75' or raw_status == '79'
+                    or raw_status == '203' or raw_status == '207'
+                    or raw_status[0:2] == '32')
+
+    async def get_vac_mode(self) -> str:
+        """Get vacuum mode."""
+        raw_mode = await self.query(self.READ_VAC_MODE)
+        return raw_mode
+
+    async def get(self) -> Dict[str, Any]:
+        """Get pump operating data."""
+        pressure = await self.get_pressure()
+        pressure_sp = await self.get_pressure_setpoint()
+        vac_mode = await self.get_vac_mode()
+        vac_status = await self.get_status()
+
         response = {
             'active': vac_status,
+            'mode': VacuumProtocol.Mode(vac_mode).name,
             'pressure': {
                 'setpoint': pressure_sp,
                 'actual': pressure,
@@ -483,7 +522,7 @@ class Vacuum(VacuumProtocol, IKADevice):
         }
         return response
 
-    async def get_info(self):
+    async def get_info(self) -> Dict[str, str]:
         """Get name and software version of vacuum."""
         name = await self.query(self.READ_DEVICE_NAME)
         version = await self.query(self.READ_SOFTWARE_VERSION)
@@ -494,9 +533,30 @@ class Vacuum(VacuumProtocol, IKADevice):
         return response
 
     async def set(self, setpoint: float):
-        """Set a vacuum pressure setpoint."""
-        await self.command(self.SET_PRESSURE + str(setpoint))
+        """Set a vacuum pressure setpoint, converting from mmHg to mbar.
+
+        Unlike other commands, the vacuum echoes back, so use query().
+        """
+        setpoint_mbar = str(int(setpoint * 1.333))
+        await self.query(self.SET_PRESSURE + setpoint_mbar)
+
+    async def set_mode(self, mode: VacuumProtocol.Mode):
+        """Set the operating mode.
+
+        Unlike other commands, the vacuum echoes back, so use query().
+        """
+        await self.query(self.SET_VAC_MODE + str(mode.value))
+
+    async def set_name(self, name: str):
+        """Set a custom device name.
+
+        Unlike other commands, the vacuum echoes back, so use query().
+        """
+        await self.query(self.SET_DEVICE_NAME + name)
 
     async def control(self, on: bool):
-        """Control the vacuum measurement."""
-        await self.command(self.START_MEASUREMENT if on else self.STOP_MEASUREMENT)
+        """Control the vacuum running status.
+
+        Unlike other commands, the vacuum echoes back, so use query().
+        """
+        await self.query(self.START_MEASUREMENT if on else self.STOP_MEASUREMENT)

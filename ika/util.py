@@ -49,14 +49,17 @@ class Client:
                 response = await self._handle_communication(command)
                 if response is None:
                     return None
-                elif 'IN_NAME' in command or 'TYPE' in command:
+                elif 'IN_VERSION' in command or 'IN_NAME' in command or 'TYPE' in command:
                     return response
                 elif 'IN_PV_4' in response:
                     raise ConnectionError(
                         'Hotplate configured to communciate with a Eurostar overhead stirrer. '
                         'This must be turned off in the hotplate settings.'
                     )
+                elif command in response:  # vacuum replies to queries by echoing the query
+                    return response.strip(command).strip()
                 elif command[-1] != response[-1]:
+                    # all others reply to queries by echoing the query at the end
                     logger.error(f'Invalid response {response} to command {command}.')
                     await self._clear()
                     return None
