@@ -22,7 +22,7 @@ def expected_response():
     """Return mocked vacuum data."""
     return {
         'name': "THIS SUCKS",
-        'version': 2.3,
+        'version': '1.3.001',
     }
 
 

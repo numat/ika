@@ -246,7 +246,7 @@ class Vacuum(RealVacuum):
             'name': 'THIS SUCKS',
             'active': False,
             'mode': VacuumProtocol.Mode.AUTOMATIC.name,
-            'version': 2.3,
+            'version': '1.3.001',
             'pressure': {
                 'setpoint': 0.0,
                 'actual': 0.0,
