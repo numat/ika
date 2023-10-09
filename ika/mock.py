@@ -265,18 +265,12 @@ class Vacuum(RealVacuum):
             elif command == self.READ_ACTUAL_PRESSURE:
                 return self.state['pressure']['actual']
             elif command == self.READ_VAC_STATUS:
-                return self.state['active']
+                return '75' if not self.state['active'] else '12345'
             elif command == self.READ_SOFTWARE_VERSION:
                 return self.state['version']
             elif command == self.READ_VAC_MODE:
                 return VacuumProtocol.Mode[self.state['mode']].value
-
-    async def command(self, command):
-        """Update mock state with commands."""
-        if not self.lock:
-            self.lock = asyncio.Lock()
-        async with self.lock:  # lock releases on CancelledError
-            if command == self.START_MEASUREMENT:
+            elif command == self.START_MEASUREMENT:
                 self.state['active'] = True
             elif command == self.STOP_MEASUREMENT:
                 self.state['active'] = False

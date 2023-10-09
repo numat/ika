@@ -4,6 +4,7 @@ import asyncio
 import logging
 from abc import ABC
 from enum import Enum
+from typing import Any
 
 from ika.util import Client, SerialClient, TcpClient
 
@@ -481,12 +482,38 @@ class Vacuum(VacuumProtocol, IKADevice):
             self.hw = TcpClient(address=address, **kwargs)
         self.lock = None  # needs to be initialized later, when the event loop exists
 
-    async def get(self):
-        """Get vacuum pressure."""
-        pressure = await self.query(self.READ_ACTUAL_PRESSURE)
-        pressure_sp = await self.query(self.READ_SET_PRESSURE)
-        vac_mode = await self.query(self.READ_VAC_MODE)
-        vac_status = await self.query(self.READ_VAC_STATUS)
+    async def get_pressure(self) -> float:
+        """Get vacuum pressure, converting to mmHg."""
+        raw_pressure = await self.query(self.READ_ACTUAL_PRESSURE)
+        return round(float(raw_pressure) / 1.333, 2)
+
+    async def get_pressure_setpoint(self) -> float:
+        """Get vacuum pressure setpoint, converting to mmHg."""
+        raw_sp = await self.query(self.READ_SET_PRESSURE)
+        return round(float(raw_sp) / 1.333, 2)
+
+    async def get_status(self) -> bool:
+        """Get vacuum status and convert to running/not running bool.
+
+        TODO: Figure out the actual status bit (bit 25?)
+        """
+        raw_status = await self.query(self.READ_VAC_STATUS)
+        return not (raw_status == '75' or raw_status == '79'
+                    or raw_status == '203' or raw_status == '207'
+                    or raw_status[0:2] == '32')
+
+    async def get_vac_mode(self) -> str:
+        """Get vacuum mode."""
+        raw_mode = await self.query(self.READ_VAC_MODE)
+        return raw_mode
+
+    async def get(self) -> dict[str, Any]:
+        """Get pump operating data."""
+        pressure = await self.get_pressure()
+        pressure_sp = await self.get_pressure_setpoint()
+        vac_mode = await self.get_vac_mode()
+        vac_status = await self.get_status()
+
         response = {
             'active': vac_status,
             'mode': VacuumProtocol.Mode(vac_mode).name,
@@ -508,17 +535,30 @@ class Vacuum(VacuumProtocol, IKADevice):
         return response
 
     async def set(self, setpoint: float):
-        """Set a vacuum pressure setpoint."""
-        await self.command(self.SET_PRESSURE + str(setpoint))
+        """Set a vacuum pressure setpoint, converting from mmHg to mbar.
+
+        Unlike other commands, the vacuum echoes back, so use query().
+        """
+        setpoint_mbar = str(int(setpoint * 1.333))
+        await self.query(self.SET_PRESSURE + setpoint_mbar)
 
     async def set_mode(self, mode: VacuumProtocol.Mode):
-        """Set the operating mode."""
-        await self.command(self.SET_VAC_MODE + str(mode.value))
+        """Set the operating mode.
+
+        Unlike other commands, the vacuum echoes back, so use query().
+        """
+        await self.query(self.SET_VAC_MODE + str(mode.value))
 
     async def set_name(self, name: str):
-        """Set a custom device name."""
-        await self.command(self.SET_DEVICE_NAME + name)
+        """Set a custom device name.
+
+        Unlike other commands, the vacuum echoes back, so use query().
+        """
+        await self.query(self.SET_DEVICE_NAME + name)
 
     async def control(self, on: bool):
-        """Control the vacuum measurement."""
-        await self.command(self.START_MEASUREMENT if on else self.STOP_MEASUREMENT)
+        """Control the vacuum running status.
+
+        Unlike other commands, the vacuum echoes back, so use query().
+        """
+        await self.query(self.START_MEASUREMENT if on else self.STOP_MEASUREMENT)
