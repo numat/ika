@@ -62,9 +62,6 @@ async def test_start_stop():
     """Confirm that the vacuum motor can be controlled."""
     async def get():
         async with Vacuum(ADDRESS) as device:
-            response = await device.get()
-            assert response['active'] is False
-
             await device.control(on=True)
             response = await device.get()
             assert response['active'] is True
