@@ -42,11 +42,7 @@ class Client:
         pass
 
     async def _write_and_read(self, command):
-        """Write a command and read a response.
-
-        As industrial devices are commonly unplugged, this has been expanded to
-        handle recovering from disconnects.
-        """
+        """Write a command and read a response."""
         await self._handle_connection()
         if self.open:
             try:
