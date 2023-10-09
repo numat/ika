@@ -4,7 +4,7 @@ import asyncio
 import logging
 from abc import ABC
 from enum import Enum
-from typing import Any
+from typing import Any, Dict
 
 from ika.util import Client, SerialClient, TcpClient
 
@@ -505,7 +505,7 @@ class Vacuum(VacuumProtocol, IKADevice):
         raw_mode = await self.query(self.READ_VAC_MODE)
         return raw_mode
 
-    async def get(self) -> dict[str, Any]:
+    async def get(self) -> Dict[str, Any]:
         """Get pump operating data."""
         pressure = await self.get_pressure()
         pressure_sp = await self.get_pressure_setpoint()
@@ -522,7 +522,7 @@ class Vacuum(VacuumProtocol, IKADevice):
         }
         return response
 
-    async def get_info(self):
+    async def get_info(self) -> Dict[str, str]:
         """Get name and software version of vacuum."""
         name = await self.query(self.READ_DEVICE_NAME)
         version = await self.query(self.READ_SOFTWARE_VERSION)

@@ -253,7 +253,7 @@ class Vacuum(RealVacuum):
             }
         }
 
-    async def query(self, command):
+    async def query(self, command) -> str:
         """Return mock requests to queries."""
         if not self.lock:
             self.lock = asyncio.Lock()
@@ -261,9 +261,9 @@ class Vacuum(RealVacuum):
             if command == self.READ_DEVICE_NAME:
                 return self.state['name']
             elif command == self.READ_SET_PRESSURE:
-                return self.state['pressure']['setpoint']
+                return str(self.state['pressure']['setpoint'])
             elif command == self.READ_ACTUAL_PRESSURE:
-                return self.state['pressure']['actual']
+                return str(self.state['pressure']['actual'])
             elif command == self.READ_VAC_STATUS:
                 return '75' if not self.state['active'] else '12345'
             elif command == self.READ_SOFTWARE_VERSION:
@@ -280,5 +280,7 @@ class Vacuum(RealVacuum):
                 self.state['pressure']['setpoint'] = float(value)
             elif command == self.SET_DEVICE_NAME.strip():
                 self.state['name'] = value
+                return ""
             elif command == self.SET_VAC_MODE.strip():
                 self.state['mode'] = VacuumProtocol.Mode(value).name
+            return command
