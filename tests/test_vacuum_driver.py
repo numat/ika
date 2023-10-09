@@ -96,13 +96,14 @@ async def test_mode_roundtrip(mode):
     await get()
 
 
-async def test_custom_name_roundtrip():
-    """Confirm that the custom name can be updated."""
+async def test_name_roundtrip():
+    """Confirm that the device name can be updated."""
     async def get():
         async with Vacuum(ADDRESS) as device:
+            await device.set_name('THIS SUCKS')
             name = (await device.get_info())['name']
             assert name == 'THIS SUCKS'
-            await device.set_name('SUCK MORE')
+            await device.set_name('VACSTAR control')
             name = (await device.get_info())['name']
-            assert name == 'SUCK MORE'
+            assert name == 'VACSTAR control'
     await get()

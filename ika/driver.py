@@ -425,9 +425,7 @@ class VacuumProtocol:
     READ_SOFTWARE_VERSION = "IN_VERSION"
     # Read the release date of the display/ logic firmware: 'IN_DATE'
     READ_DEVICE_NAME = "IN_NAME"
-    # Read custom device name: "IN_CUSTOM_DEVICE_NAME"
-    # unsure of difference between IN_NAME and IN_CUSTOM_DEVICE_NAME
-    SET_DEVICE_NAME = "OUT_CUSTOM_DEVICE_NAME "
+    SET_DEVICE_NAME = "OUT_NAME "  # manual incorrectly refers to CUSTOM_DEVICE_NAME
     # Read the device type.: 'IN_DEVICE'
     # Read mac address of Wico.: 'IN_ADDRESS'
     # Read paired mac address of station.: 'IN_PARING' (sic)
