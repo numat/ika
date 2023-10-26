@@ -22,6 +22,7 @@ select = [
     # "ARG", # flake8-unused args
     # "B"    # bandit
 ]
+target-version = "py38"
 [pydocstyle]
 convention = "pep257"
 [flake8-unused-arguments]
