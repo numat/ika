@@ -17,3 +17,5 @@ repos:
     hooks:
     -   id: check-github-workflows
         args: ["--verbose"]
+    -   id: check-renovate
+        args: ["--verbose"]
