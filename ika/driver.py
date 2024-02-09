@@ -486,9 +486,9 @@ class Vacuum(VacuumProtocol, IKADevice):
         return round(float(raw_pressure) / 1.333, 2)
 
     async def get_pressure_setpoint(self) -> float:
-        """Get vacuum pressure setpoint, converting to mmHg."""
+        """Get vacuum pressure setpoint, in mmHg."""
         raw_sp = await self.query(self.READ_SET_PRESSURE)
-        return round(float(raw_sp) / 1.333, 2)
+        return round(float(raw_sp), 2)
 
     async def get_status(self) -> bool:
         """Get vacuum status and convert to running/not running bool.
@@ -537,7 +537,7 @@ class Vacuum(VacuumProtocol, IKADevice):
 
         Unlike other commands, the vacuum echoes back, so use query().
         """
-        setpoint_mbar = str(int(setpoint * 1.333))
+        setpoint_mbar = str(int(setpoint))
         await self.query(self.SET_PRESSURE + setpoint_mbar)
 
     async def set_mode(self, mode: VacuumProtocol.Mode):
