@@ -36,7 +36,7 @@ import asyncio
 from ika import Hotplate, OverheadStirrer
 
 async def get():
-    async with OverheadStirrer('ip-address:port') as strirrer:
+    async with OverheadStirrer('ip-address:port') as stirrer:
         print(await stirrer.get())
     async with Hotplate('ip-address:port') as hotplate:
         print(await hotplate.get())
