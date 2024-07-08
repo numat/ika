@@ -537,7 +537,7 @@ class Vacuum(VacuumProtocol, IKADevice):
 
         Unlike other commands, the vacuum echoes back, so use query().
         """
-        setpoint_mbar = str(int(setpoint))
+        setpoint_mbar = str(int(setpoint * 1.333))
         await self.query(self.SET_PRESSURE + setpoint_mbar)
 
     async def set_mode(self, mode: VacuumProtocol.Mode):
