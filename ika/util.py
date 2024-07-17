@@ -9,6 +9,7 @@ from abc import abstractmethod
 
 import serial
 
+# Add logger to module
 logger = logging.getLogger('ika')
 
 
