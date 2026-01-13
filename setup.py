@@ -18,7 +18,7 @@ setup(
     extras_require={
         'test': [
             'pytest>=6,<8',
-            'pytest-cov>=5,<6',
+            'pytest-cov>=7,<8',
             'pytest-asyncio==0.*',
             'pytest-xdist==3.*',
             'ruff==0.14.10',
