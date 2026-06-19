@@ -17,7 +17,7 @@ setup(
     install_requires=['pyserial'],
     extras_require={
         'test': [
-            'pytest>=6,<8',
+            'pytest>=9,<10',
             'pytest-cov>=5,<6',
             'pytest-asyncio==0.*',
             'pytest-xdist==3.*',
